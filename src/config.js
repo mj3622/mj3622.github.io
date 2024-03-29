@@ -19,15 +19,15 @@ export default {
   }, {
     icon: 'icon-qianbi1',
     title: '数据库',
-    msg: ['MySQL', 'Redis', 'SQLite']
+    msg: ['MySQL', 'Redis', 'SQLite', 'MongoDB']
   }, {
     icon: 'icon-shouji',
-    title: '框架',
-    msg: ['Spring框架',]
+    title: '框架/中间件',
+    msg: ['SpringBoot','SpringCloud', 'Mybatis', 'RabbitMQ', ]
   }, {
     icon: 'icon-tubiao-',
     title: '其余技能',
-    msg: ['git', 'markdown', 'docker']
+    msg: ['git', 'markdown', 'docker', 'Linux']
   },],
   // page4部分
   page4: {
@@ -46,35 +46,65 @@ export default {
     }, {
       title: 'Java',
       text: '掌握'
+    },{
+      title: 'Python',
+      text: '了解'
+    }, {
+      title: 'SpringBoot',
+      text: '掌握'
     }],
     // 我的基本技能掌握
     proresslist: [{
+      title: 'Java',
+      value: '90%'
+    }, {
       title: 'SpringBoot',
       value: '80%'
     }, {
       title: 'MySQL',
-      value: '70%'
+      value: '80%'
     }, {
       title: 'Redis',
-      value: '40%'
+      value: '60%'
+    },{
+      title: 'RabbitMQ',
+      value: '60%'
+    },{
+      title: 'Mybatis',
+      value: '70%'
     }]
   },
   // page5部分
   page5: [{
     title: 'Emoprobe情感分析系统',
     content: '进行后端开发，使用SpringBoot框架，MySQL数据库，Redis缓存，进行情感分析',
-    image: 'box1.png',
+    image: 'poj1.png',
     href: 'https://github.com/pxxxl/Emoprobe'
   }, {
     title: '局域网聊天室',
     content: '有GUI界面的局域网聊天室，支持群聊，私聊，匿名聊天',
-    image: 'box3.jpg',
+    image: 'poj2.jpg',
     href: 'https://github.com/mj3622/MomoTalk'
   }, {
     title: 'AutoArchive',
     content: '实现游戏《Blue Archive》的自动化操作，包括自动刷图，自动购买道具，自动领取奖励等',
-    image: 'box5.jpg',
+    image: 'poj3.jpg',
     href: 'https://github.com/mj3622/AutoArchive'
+  },{
+    title: 'Mist-Forum论坛项目',
+    content: '基于Spring Cloud的分布式论坛项目，含有用户端和管理端，实现了用户注册、登录、发帖、评论、点赞等功能',
+    image: 'poj4.jpg',
+    href: 'https://github.com/mj3622/mist-forum'
+  },{
+    title: '校园外卖系统',
+    content: '基于SpringBoot的校园外卖系统，有微信小程序的用户端和商家管理的Web端，实现了用户注册、登录、下单、支付等功能',
+    image: 'poj5.jpg',
+    href: 'https://github.com/mj3622/Sky-Takeout'
+  },{
+    title: 'DigitalClock',
+    content: '基于Nexys4 DDR开发板的Verilog实现的数字钟项目，数字钟可以实现计时、闹钟等功能',
+    image: 'poj6.jpg',
+    href: 'https://github.com/mj3622/DIgitalClock_Design'
   }],
   // page6部分
   page6: {
