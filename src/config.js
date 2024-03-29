@@ -83,27 +83,27 @@ export default {
   }, {
     title: '局域网聊天室',
     content: '有GUI界面的局域网聊天室，支持群聊，私聊，匿名聊天',
-    image: 'poj2.jpg',
+    image: 'poj2.png',
     href: 'https://github.com/mj3622/MomoTalk'
   }, {
     title: 'AutoArchive',
     content: '实现游戏《Blue Archive》的自动化操作，包括自动刷图，自动购买道具，自动领取奖励等',
-    image: 'poj3.jpg',
+    image: 'poj3.png',
     href: 'https://github.com/mj3622/AutoArchive'
   },{
     title: 'Mist-Forum论坛项目',
     content: '基于Spring Cloud的分布式论坛项目，含有用户端和管理端，实现了用户注册、登录、发帖、评论、点赞等功能',
-    image: 'poj4.jpg',
+    image: 'poj4.png',
     href: 'https://github.com/mj3622/mist-forum'
   },{
     title: '校园外卖系统',
     content: '基于SpringBoot的校园外卖系统，有微信小程序的用户端和商家管理的Web端，实现了用户注册、登录、下单、支付等功能',
-    image: 'poj5.jpg',
+    image: 'poj5.png',
     href: 'https://github.com/mj3622/Sky-Takeout'
   },{
     title: 'DigitalClock',
     content: '基于Nexys4 DDR开发板的Verilog实现的数字钟项目，数字钟可以实现计时、闹钟等功能',
-    image: 'poj6.jpg',
+    image: 'poj6.png',
     href: 'https://github.com/mj3622/DIgitalClock_Design'
   }],
   // page6部分
