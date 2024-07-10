@@ -1,17 +1,17 @@
 ---
 title: 获取Github的token
 published: 2024-07-10
-description: 介绍如何获取如何获取Github的token，以使用Github API
+description: 本文将详细介绍如何获取GitHub的token，以便你能够利用GitHub API进行各种操作。无论你是想自动化管理你的代码仓库、获取项目的统计信息，还是实现其他与GitHub互动的功能，掌握如何获取和使用token是关键的一步。
 tags: [Github, Token]
-category: 资源获取
+category: 经验分享
 draft: false
 ---
 
 为了使用[GitHub API](https://docs.github.com/en/rest/quickstart?apiVersion=2022-11-28)，我们需要先获取到Personal access tokens进行授。下面，本文将简要介绍如何获取token。
 
----
 
-## 1. 进入token管理页面
+
+# 1. 进入token管理页面
 
 **方法一：**
 
@@ -33,7 +33,7 @@ draft: false
 
    ![image-20240710094647384](./assets/image-20240710094647384.png)
 
-## 2. 生成token
+# 2. 生成token
 
 点击Generate new token，进入Generae new token（classic）页面
 
@@ -47,7 +47,7 @@ draft: false
 
 ![image-20240710101210627](./assets/image-20240710101210627.png)
 
-## 3. 查看token
+# 3. 查看token
 
 在完成上述步骤后，返回token管理页面，即可看到我们刚刚生成的token
 
