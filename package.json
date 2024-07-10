@@ -21,6 +21,7 @@
     "@astrojs/tailwind": "^5.1.0",
     "@fontsource-variable/jetbrains-mono": "^5.0.21",
     "@fontsource/roboto": "^5.0.13",
+    "@iconify-json/ic": "^1.1.17",
     "@iconify-json/mage": "^1.1.0",
     "@swup/astro": "^1.4.1",
     "astro": "^4.11.0",

@@ -52,6 +52,11 @@ export const profileConfig: ProfileConfig = {
       url: 'mailto:lizw@hust.edu.cn',
     },
     {
+      name: 'University',
+      icon: 'ic:sharp-school',
+      url: 'https://www.hust.edu.cn/',
+    },
+    {
       name: 'Bilibili',
       icon: 'fa6-brands:bilibili',
       url: 'https://space.bilibili.com/26218196',
