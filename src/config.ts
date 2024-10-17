@@ -54,7 +54,7 @@ export const profileConfig: ProfileConfig = {
     {
       name: 'CV',
       icon: 'ic:sharp-school',
-      url: 'https://mj3622.github.io/src/pdf/Zhiwei_Li_CV.pdf',
+      url: 'https://mj3622.github.io/docs/Zhiwei_Li_CV.pdf',
     },
     {
       name: 'Bilibili',
