@@ -1,7 +1,7 @@
 ---
 title: 获取Github的token
 published: 2024-07-10
-description: 本文将详细介绍如何获取GitHub的token，以便你能够利用GitHub API进行各种操作。无论你是想自动化管理你的代码仓库、获取项目的统计信息，还是实现其他与GitHub互动的功能，掌握如何获取和使用token是关键的一步。
+description: 本文将详细介绍如何获取GitHub的token，以便你能够利用GitHub API进行各种操作
 tags: [git, Token]
 category: 经验分享
 draft: false

@@ -1,7 +1,7 @@
 ---
 title: Typora自定义图片上传
 published: 2024-07-11
-description: 在使用Typora编辑器时，图片上传服务可以极大地增强工作效率和灵活性。本文将介绍如何配置Typora以使用自定义服务进行图片上传，让您可以无缝地将图片直接上传到您喜欢的云存储平台。通过简单的配置，您可以轻松管理和分享图片。
+description: 本文将介绍如何配置Typora以使用自定义服务进行图片上传
 tags: [云服务]
 category: 经验分享
 draft: false
