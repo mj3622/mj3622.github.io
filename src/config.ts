@@ -52,9 +52,9 @@ export const profileConfig: ProfileConfig = {
       url: 'mailto:lizw@hust.edu.cn',
     },
     {
-      name: 'CV',
+      name: 'University',
       icon: 'ic:sharp-school',
-      url: './content/Zhiwei_Li_CV.pdf',
+      url: 'https://www.hust.edu.cn/',
     },
     {
       name: 'Bilibili',
