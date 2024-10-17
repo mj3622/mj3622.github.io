@@ -52,9 +52,9 @@ export const profileConfig: ProfileConfig = {
       url: 'mailto:lizw@hust.edu.cn',
     },
     {
-      name: 'University',
+      name: 'CV',
       icon: 'ic:sharp-school',
-      url: 'https://www.hust.edu.cn/',
+      url: 'https://github.com/mj3622/mj3622.github.io/blob/main/src/pdf/CV.pdf',
     },
     {
       name: 'Bilibili',
