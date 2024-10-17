@@ -1,7 +1,5 @@
 # 关于我
 
-<embed src="https://mj3622.github.io/src/content/spec/Zhiwei_Li_CV.pdf" width="600" height="500" type="application/pdf">
-
 - 电信专业本科生，开源爱好者
 - 🌱 华科在读
 - ⭐ 准备出国留学
