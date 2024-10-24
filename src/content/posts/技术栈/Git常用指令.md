@@ -128,7 +128,7 @@ draft: false
 
 **一次性将所有标签推送到远程：**`git push origin --tags`
 
-**删除已推送的远程标签：**首先现在本地将标签删除，然后再运行`git push origin :refs/tags/<tag-name>`
+**删除已推送的远程标签：** 首先现在本地将标签删除，然后再运行`git push origin :refs/tags/<tag-name>`
 
 
 
@@ -145,8 +145,8 @@ draft: false
 **添加远程仓库：**
 
 1. 在GitHub上新建一个新的仓库，然后获取https或ssh连接
-   1. 使用`git push -u origin master`将本地库所有内容推送到远程库上去
-2. 之后我们只需要使用`git push origin master`
+2. 使用`git push -u origin master`将本地库所有内容推送到远程库上去
+3. 之后我们只需要使用`git push origin master`
 
 
 
