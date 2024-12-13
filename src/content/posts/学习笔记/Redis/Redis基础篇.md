@@ -8,10 +8,6 @@ category: 学习笔记
 draft: false
 ---
 
-> [!NOTE]
->
-> 本篇笔记基于[黑马程序员Redis教程](https://www.bilibili.com/video/BV1cr4y1671t) 基础篇内容
-
 # 1. 认识Redis
 
 Redis 是一种开源的高性能键值数据库，全称为 Remote Dictionary Server（远程字典服务器）。它通常用作缓存、消息队列、分布式锁等场景中的核心组件，同时也支持丰富的数据结构和多种高级特性。
@@ -624,3 +620,169 @@ public class JedisFactory {
 
 ## 3.2 Spring Data Redis
 
+Spring Data Redis 是 Spring Framework 的一个子项目，旨在简化 Redis 数据库的访问。它提供了对 Redis 的高层次抽象和方便的操作方式，使开发者能够更高效地使用 Redis 的功能。
+
+### 核心功能
+
+1. **RedisTemplate 提供操作接口**
+   - Spring Data Redis 提供了 `RedisTemplate` 和 `StringRedisTemplate`，以便对 Redis 数据库进行操作。
+   - 它封装了对 Redis 的低级命令，支持各种数据结构（如字符串、哈希、列表、集合、有序集合等）的操作。
+2. **支持多种 Redis 数据结构**
+   - **String** ：简单的键值对存储。
+   - **Hash **：适合存储对象或关联数据。
+   - **List** ：适合处理任务队列。
+   - **Set 和 Sorted Set** ：用于无序和有序集合存储。
+   - **Pub/Sub**：支持发布/订阅消息模式。
+3. **连接池管理**
+   - Spring Data Redis 默认支持多种 Redis 连接池实现（如 Jedis、Lettuce）。
+4. **事务支持**
+   - 支持 Redis 的事务操作，确保一组命令的原子性执行。
+5. **缓存集成**
+   - Spring Data Redis 集成了 Spring 的缓存抽象（`@Cacheable`、`@CacheEvict` 等注解），可以将 Redis 用作高效的缓存存储。
+6. **支持 Redis 哨兵和集群**
+   - 对 Redis Sentinel 和 Redis Cluster 提供了良好的支持，以实现高可用性和分布式部署。
+
+
+
+### RedisTemplate 的常用接口
+
+| **功能模块**        | **操作方法**                                                 | **用途**                                              |
+| ------------------- | ------------------------------------------------------------ | ----------------------------------------------------- |
+| **String 操作**     | `opsForValue()`                                              | 用于操作 Redis 的 String 类型数据。                   |
+| **Hash 操作**       | `opsForHash()`                                               | 用于操作 Redis 的 Hash 类型数据。                     |
+| **List 操作**       | `opsForList()`                                               | 用于操作 Redis 的 List 类型数据（如队列、栈）。       |
+| **Set 操作**        | `opsForSet()`                                                | 用于操作 Redis 的 Set 类型数据（无序集合）。          |
+| **Sorted Set 操作** | `opsForZSet()`                                               | 用于操作 Redis 的 Sorted Set 类型数据（有序集合）。   |
+| **Key 操作**        | `delete(key)`<br>`hasKey(key)`<br>`expire(key, timeout, unit)` | 用于管理 Redis 键的存在性、删除和过期时间设置等操作。 |
+| **事务操作**        | `multi()`<br>`exec()`<br>`discard()`                         | 用于开启、提交或放弃 Redis 事务。                     |
+| **发布/订阅**       | `convertAndSend(topic, message)`                             | 用于向 Redis 发布消息。                               |
+| **脚本执行**        | `execute(script, keys, args)`                                | 执行 Redis 的 Lua 脚本，适合实现复杂的原子操作。      |
+| **管道操作**        | `executePipelined()`                                         | 批量执行 Redis 命令以提高性能。                       |
+
+
+
+### 使用方法
+
+1. 在Spring项目中引入Maven依赖
+
+   ```xml
+   <!-- Spring Boot Redis starter -->
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-data-redis</artifactId>
+   </dependency>
+   <!-- 连接池 -->
+   <dependency>
+       <groupId>org.apache.commons</groupId>
+       <artifactId>commons-pool2</artifactId>
+   </dependency>
+   <!-- 序列化器 -->
+   <dependency>
+       <groupId>com.fasterxml.jackson.core</groupId>
+       <artifactId>jackson-databind</artifactId>
+   </dependency>
+   ```
+
+2. 在`application.yml`中配置Redis的信息
+
+   ```yml
+   spring:
+     data:
+       redis:
+         host: localhost
+         port: ${redis.port}
+         password: ${redis.password}
+         database: ${redis.database}
+         lettuce:
+           pool:
+             max-active: 8 # 连接池最大连接数（使用负值表示没有限制）
+             max-idle: 8   # 连接池中的最大空闲连接
+             min-idle: 0   # 连接池中的最小空闲连接
+             max-wait: 100 # 连接池最大阻塞等待时间（使用负值表示没有限制）
+   ```
+
+3. 自定义 RedisTemplate 配置（默认的序列化器可读性差且内存占用大）
+
+   ```java
+   @Configuration
+   public class RedisConfig {
+   
+       @Bean
+       public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+           RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+           redisTemplate.setConnectionFactory(connectionFactory);
+   
+           // 设置 Key 和 HashKey 的序列化方式
+           redisTemplate.setKeySerializer(new StringRedisSerializer());
+           redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+   
+           // 设置 Value 和 HashValue 的序列化方式
+           redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+           redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+   
+           redisTemplate.afterPropertiesSet();
+           return redisTemplate;
+       }
+   }
+   ```
+
+4. 使用，以操作`String`类型为例
+
+   ```java
+   @Service
+   public class RedisStringService {
+   
+       @Autowired
+       private RedisTemplate<String, Object> redisTemplate;
+   
+       // 保存字符串
+       public void saveString(String key, String value) {
+           redisTemplate.opsForValue().set(key, value);
+       }
+   
+       // 获取字符串
+       public String getString(String key) {
+           return (String) redisTemplate.opsForValue().get(key);
+       }
+   
+       // 设置过期时间
+       public void setExpire(String key, long timeout) {
+           redisTemplate.expire(key, timeout, TimeUnit.SECONDS);
+       }
+   }
+   ```
+
+   
+
+### 优化使用
+
+通过上面这种使用方式，程序会自动完成序列化和反序列化操作，这样很便于我们使用。但是这种方法仍然有一定的弊端，如下图所示，这是一个自定义类，为了实现自动序列化和反序列化，它会将类的基本信息也一并存入。当数据量较大时，就会产生过多的占用，浪费系统资源。因此，最好手动序列化和反序列化。
+
+![image-20241213183112029](./assets/image-20241213183112029.png)
+
+要实现手动序列化有很多可选方案，例如fastjson，ObjectMapper等。下面以ObjectMapper为例，介绍如何使用
+
+```java
+@Autowired
+private StringRedisTemplate stringRedisTemplate;
+
+private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Test
+    void testStringRedisTemplate() {
+        Person person = new Person("张三", 25);
+        try {
+            stringRedisTemplate.opsForValue().set("exercise:person:3", objectMapper.writeValueAsString(person));
+            String personJson = stringRedisTemplate.opsForValue().get("exercise:person:3");
+            Person person1 = objectMapper.readValue(personJson, Person.class);
+            System.out.println(person1.getName());
+            System.out.println(person1.getAge());
+        } catch (Exception e) {
+            System.out.println("Error");
+        }
+    }
+```
+
+从下图中可以看到，通过这种方式存取的对象就不会包含类的信息。在后续可以进行进一步的封装以更好的使用。
+
+![image-20241213185107214](./assets/image-20241213185107214.png)
