@@ -303,7 +303,9 @@ Redis 哨兵（**Sentinel**）是一个用于 Redis 集群高可用性（High Av
 
 ### 2. 搭建哨兵集群
 
-1.如果没有安装`redis-sentinel`，先运行下面的指令安装
+**1.安装服务**
+
+如果没有安装`redis-sentinel`，先运行下面的指令安装
 
 ```bash
 sudo apt update
@@ -312,7 +314,9 @@ sudo apt install redis-sentinel -y
 
 
 
-2.为每个哨兵编写一份配置文件
+**2.编写配置**
+
+为每个哨兵编写一份配置文件
 
 ```bash
 port 26379
@@ -335,7 +339,7 @@ sentinel parallel-syncs mymaster 1
 
 
 
-3.分别启动三个哨兵
+**3.启动**
 
 ```bash
 # 第1个
@@ -348,7 +352,7 @@ redis-sentinel s3/sentinel.conf
 
 
 
-4.测试
+**4.测试**
 
 手动关停7000端口主节点，若观察到主节点发生切换，即证明哨兵正常运行
 
@@ -394,3 +398,499 @@ redis-sentinel s3/sentinel.conf
    - MASTER_PREFERRED：优先从master节点读取，master不可用才读取replica
    - REPLICA：从slave（replica）节点读取
    - REPLICA_PREFERRED：优先从slave（replica）节点读取，所有的slave都不可用才读取master
+
+
+
+## 1.5 Redis分片集群
+
+### 1. 基本介绍
+
+Redis 分片集群（Redis Cluster Sharding）是一种通过将数据划分到多个 Redis 实例（节点）中来实现高可扩展性和高可用性的分布式架构。它通过对数据进行分片（Sharding）来减轻单个 Redis 实例的负担，提供横向扩展的能力
+
+
+
+### 2. 搭建分片集群
+
+![image-20241222171228495](./assets/image-20241222171228495.png)
+
+在本节中，将搭建一个最小的三主三从分片集群：
+
+**1.创建配置文件**
+
+创建目录
+
+```sh
+# 进入/tmp目录
+cd /tmp
+
+# 创建目录
+mkdir 7001 7002 7003 8001 8002 8003
+```
+
+
+
+在/tmp下准备一个新的redis.conf文件，内容如下：
+
+```ini
+port 6379
+# 开启集群功能
+cluster-enabled yes
+# 集群的配置文件名称，不需要我们创建，由redis自己维护
+cluster-config-file /tmp/6379/nodes.conf
+# 节点心跳失败的超时时间
+cluster-node-timeout 5000
+# 持久化文件存放目录
+dir /tmp/6379
+# 绑定地址
+bind 0.0.0.0
+# 让redis后台运行
+daemonize yes
+# 注册的实例ip（改成自己的）
+replica-announce-ip 192.168.31.152
+# 保护模式
+protected-mode no
+# 数据库数量
+databases 1
+# 日志
+logfile /tmp/6379/run.log
+```
+
+将这个文件拷贝到每个目录下：
+
+```sh
+# 进入/tmp目录
+cd /tmp
+# 执行拷贝
+echo 7001 7002 7003 8001 8002 8003 | xargs -t -n 1 cp redis.conf
+```
+
+
+
+修改每个目录下的redis.conf，将其中的6379修改为与所在目录一致：
+
+```sh
+# 进入/tmp目录
+cd /tmp
+# 修改配置文件
+printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t sed -i 's/6379/{}/g' {}/redis.conf
+```
+
+
+
+**2.启动实例**
+
+因为已经配置了后台启动模式，所以可以直接启动服务：
+
+```sh
+# 进入/tmp目录
+cd /tmp
+# 一键启动所有服务
+printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t redis-server {}/redis.conf
+```
+
+通过ps查看状态：
+
+```sh
+ps -ef | grep redis
+```
+
+发现服务都已经正常启动：
+
+![image-20241222173439182](./assets/image-20241222173439182.png)
+
+关闭指令：
+
+```bash
+printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t redis-cli -p {} shutdown
+```
+
+
+
+**3.启动集群**
+
+Redis5.0以后集群管理以及集成到了redis-cli中，格式如下：
+
+```sh
+redis-cli --cluster create --cluster-replicas 1 192.168.31.152:7001 192.168.31.152:7002 192.168.31.152:7003 192.168.31.152:8001 192.168.31.152:8002 192.168.31.152:8003
+```
+
+命令说明：
+
+- `redis-cli --cluster`或者`./redis-trib.rb`：代表集群操作命令
+- `create`：代表是创建集群
+- `--replicas 1`或者`--cluster-replicas 1` ：指定集群中每个master的副本个数为1，此时`节点总数 ÷ (replicas + 1)` 得到的就是master的数量。因此节点列表中的前n个就是master，其它节点都是slave节点，随机分配到不同master
+
+
+
+### 3. 散列插槽
+
+Redis 集群通过将所有数据划分为 16384 个散列插槽（编号从 0 到 16383），并将这些插槽分配给不同的节点，从而实现数据的分布式管理和存储。
+
+
+
+**散列插槽的工作原理**
+
+1. **哈希计算**
+   Redis 使用 `CRC16` 算法计算键的哈希值，然后对 16384 取模，得到该键对应的散列插槽编号：
+2. **插槽分配**
+   Redis 集群中的每个主节点管理多个散列插槽。例如：
+   - 节点 A 负责插槽范围 `0-5460`。
+   - 节点 B 负责插槽范围 `5461-10922`。
+   - 节点 C 负责插槽范围 `10923-16383`。
+3. **键存储**
+   每个键根据其散列插槽编号被存储到对应负责该插槽的节点上。
+
+
+
+Redis 集群默认不支持跨多个插槽的操作（如 `MSET`、`MGET`）。为了解决这个问题，可以使用 **哈希标签（hash tag）** 将多个键映射到同一个插槽。例如：
+
+- `key1` 和 `key2` 都包含 `{user}`，如 `user:{123}` 和 `user:{456}`。
+- Redis 只会对 `{user}` 部分计算哈希值，从而将这两个键映射到同一个散列插槽。
+
+
+
+### 4. 集群伸缩
+
+Redis 集群的伸缩是指通过动态调整集群中的节点数量来适应业务需求的变化。Redis 集群支持 **水平扩展（Scale Out）** 和 **水平缩减（Scale In）**，即增加或移除节点以动态改变集群容量。
+
+
+
+**扩容步骤**
+
+1. **添加新节点**
+
+   - 启动一个新的 Redis 实例，并配置为集群模式（`cluster-enabled yes`）。
+   - 将新节点加入现有的 Redis 集群。
+
+   ```bash
+   redis-cli --cluster add-node <new-node-ip>:<port> <existing-node-ip>:<port>
+   ```
+
+2. **重新分配哈希槽**
+
+   - 新节点加入后，Redis 集群会重新分配部分哈希槽给新节点。
+   - 集群会将数据从原先负责这些哈希槽的节点迁移到新节点。
+
+   ```bash
+   redis-cli --cluster reshard <existing-node-ip>:<port>
+   ```
+
+3. **数据迁移**
+
+   - 在迁移过程中，Redis 会将哈希槽及其对应的数据从旧节点复制到新节点。迁移是在线完成的，客户端对这一过程透明。
+
+4. **验证集群状态**
+
+   - 执行以下命令检查集群是否正常：
+
+     ```bash
+     redis-cli --cluster check <existing-node-ip>:<port>
+     ```
+
+
+
+**缩容步骤**
+
+1. **选择要移除的节点**
+
+   - 确定需要移除的节点，通常是负载较轻或冗余的节点。
+
+2. **迁移哈希槽**
+
+   - 将待移除节点负责的哈希槽迁移到其他节点。
+
+   ```bash
+   redis-cli --cluster reshard <existing-node-ip>:<port>
+   ```
+
+3. **移除节点**
+
+   - 完成哈希槽迁移后，将节点从集群中移除。
+
+   ```bash
+   redis-cli --cluster del-node <existing-node-ip>:<port> <node-id>
+   ```
+
+4. **关闭节点**
+
+   - 从集群中移除后，可以安全地关闭该节点。
+
+
+
+### 5. 故障转移
+
+**故障转移：**
+
+![image-20241222181440240](./assets/image-20241222181440240.png)
+
+
+
+**数据迁移：**
+
+可以利用`cluster failover`命令手动使集群中的某个master宕机，切换到执行该命令的slave节点，实现数据的无感迁移，其流程如下所示：
+
+![image-20241222181652084](./assets/image-20241222181652084.png)
+
+手动Failover支持以下几种模式：
+
+- 缺省：默认的流程，如上图所示
+- force：省略了对offset的一致性校验
+- takeover：直接执行第5步，忽略数据一致性、忽略master状态和其它master的意见
+
+
+
+### 6. RedisTemplate访问分片集群
+
+基本与哨兵模式一致，只需要修改配置文件即可
+
+1. 引入redis依赖
+
+   ```xml
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-data-redis</artifactId>
+   </dependency>
+   ```
+
+2. 再`application.yml`中配置相关信息
+
+   ```yml
+   spring:
+     data:
+       redis:
+         cluster:
+         	nodes:	# 每一个节点的信息
+         	  -  192.168.31.152:7001
+         	  -  192.168.31.152:7002
+         	  -  192.168.31.152:7003
+         	  -  192.168.31.152:8001
+         	  -  192.168.31.152:8002
+         	  -  192.168.31.152:8003
+   ```
+
+3. 配置主从读写分离
+
+   ```java
+   @Bean
+   public LettuceClientConfigurationBuilderCustomizer lettuceClientConfigurationBuilderCustomizer() {
+       return clientConfigurationBuilder -> clientConfigurationBuilder.readFrom(ReadFrom.REPLICA_PREFERRED);
+   }
+   ```
+
+
+
+
+
+
+# 2. 多级缓存
+
+## 2.1 多级缓存介绍
+
+![image-20241222192200181](./assets/image-20241222192200181.png)
+
+![image-20241222192218234](./assets/image-20241222192218234.png)
+
+**多级缓存架构**
+
+1. **一级缓存（本地缓存）：**
+   - 使用 OpenResty 的 `lua_shared_dict` 实现的共享内存缓存，存储热点数据，访问速度极快。
+   - 数据生命周期短，适合高频访问的临时数据。
+2. **二级缓存（分布式缓存）：**
+   - 使用 Redis 或其他分布式缓存，存储更大规模的数据。
+   - 数据生命周期较长，适合全局共享的数据。
+3. **持久化存储（数据库）：**
+   - 缓存未命中时，最终从数据库中加载数据。
+
+
+
+## 2.2 JVM进程缓存
+
+缓存在日常开发中启动至关重要的作用，由于是存储在内存中，数据的读取速度是非常快的，能大量减少对数据库问，减少数据库的压力。我们把缓存分为两类：
+
+- 分布式缓存，例如Redis：
+  - 优点：存储容量更大、可靠性更好、可以在集群间共享
+  - 缺点：访问缓存有网络开销
+  - 场景：缓存数据量较大、可靠性要求较高、需要在集群间共享
+- 进程本地缓存，例如HashMap、GuavaCache：
+  - 优点：读取本地内存，没有网络开销，速度更快
+  - 缺点：存储容量有限、可靠性较低、无法共享
+  - 场景：性能要求较高，缓存数据量较小
+
+
+
+
+
+::github{repo="ben-manes/caffeine"}
+
+在Java中，我们可以使用caffeine来简单使用
+
+使用方法：
+
+1. 引入依赖
+
+   ```xml
+   <dependency>
+       <groupId>com.github.ben-manes.caffeine</groupId>
+       <artifactId>caffeine</artifactId>
+       <version>3.1.8</version>
+   </dependency>
+   ```
+
+2. 配置属性
+
+   ![image-20241222195629683](./assets/image-20241222195629683.png)
+
+3. 使用
+
+   ```java
+   // 放入缓存
+   cache.put("key1", "value1");
+   
+   // 读取缓存
+   String value = cache.getIfPresent("key1");
+   System.out.println("Cached Value: " + value);
+   
+   // 如果不存在，使用计算函数加载
+   String computedValue = cache.get("key2", k -> "computedValue for " + k);
+   System.out.println("Computed Value: " + computedValue);
+   ```
+
+   
+
+## 2.3 OpenResty
+
+::github{repo="openresty/openresty"}
+
+OpenResty 是一个基于 Nginx 的高性能 Web 应用服务器，它集成了 Lua 脚本引擎和一系列的 Nginx 模块，能够以非阻塞的方式处理复杂的 Web 请求。
+
+
+
+**主要功能**
+
+1. **动态路由和请求处理**：通过 Lua 脚本实现动态路由和请求处理逻辑。
+2. **API 网关**：可以用作高性能的 API 网关，支持负载均衡、限流、鉴权等功能。
+3. **缓存**：支持本地共享内存缓存（`lua_shared_dict`）和分布式缓存（如 Redis 和 Memcached）。
+4. **数据交互**：OpenResty 提供与数据库交互的支持，包括 MySQL、PostgreSQL、Redis 等。
+5. **静态资源服务**：像 Nginx 一样，可以高效地提供静态资源服务。
+
+
+
+> [!NOTE]
+>
+> 具体使用教程可参考官方文档：[OpenResty - Getting Started](https://openresty.org/cn/getting-started.html)
+
+
+
+## 2.4 缓存同步策略
+
+常见的缓存同步策略有以下几种：
+
+- **设置有效期**：给缓存设置有效期，到期后自动删除。再次查询时更新
+  - 优势：简单、方便
+  - 缺点：时效性差，缓存过期之前可能不一致
+  - 场景：更新频率较低，时效性要求低的业务
+- **同步双写**：在修改数据库的同时，直接修改缓存
+  - 优势：时效性强，缓存与数据库强一致
+  - 缺点：有代码侵入，耦合度高
+  - 场景：对一致性、时效性要求较高的缓存数据
+- **异步通知**：修改数据库时发送事件通知，相关服务监听到通知后修改缓存数据
+  - 优势：低耦合，可以同时通知多个缓存服务
+  - 缺点：时效性一般，可能存在中间不一致状态
+  - 场景：时效性要求一般，有多个服务需要同步
+
+
+
+::github{repo="alibaba/canal"}
+
+**canal [kə'næl]**，译意为水道/管道/沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。
+
+![image-20241222203422202](./assets/image-20241222203422202.png)
+
+### **架构流程**
+
+1. **数据库变更（DML 操作）**：应用程序执行 `INSERT`、`UPDATE` 或 `DELETE` 操作。
+2. **Canal 监听 Binlog**：Canal 作为 MySQL 的伪从库，实时获取 Binlog 日志并解析出变更数据。
+3. **数据推送**：Canal 解析变更数据后，推送到消息队列（如 Kafka、RabbitMQ）或直接推送到消费端。
+4. **缓存同步**：消费端收到变更事件后，更新 Redis、本地缓存等多级缓存。
+
+
+
+###使用方法
+
+1. 开启MySQL主从：在MySQL的配置文件`my.cnf`中添加以下内容
+
+   ```ini
+   log-bin=/var/lib/mysql/mysql-bin
+   binlog-do-db=mydb
+   ```
+
+   - `log-bin=/var/lib/mysql/mysql-bin`：设置binary log文件的存放地址和文件名，叫做mysql-bin
+   - `binlog-do-db=mydb`：指定对哪个database记录binary log events，这里记录mydb这个库
+
+2. 设置用户权限：添加一个仅用于数据同步的账户
+
+   ```mysql
+   create user canal@'%' IDENTIFIED by 'canal';
+   GRANT SELECT, REPLICATION SLAVE, REPLICATION CLIENT,SUPER ON *.* TO 'canal'@'%' identified by 'canal';
+   FLUSH PRIVILEGES;
+   ```
+
+3. 修改canal配置文件：修改`instance.properties`文件
+
+   ```properties
+   canal.instance.mysql.slaveId = 1234
+   canal.instance.master.address = 127.0.0.1:3306
+   canal.instance.dbUsername = canal
+   canal.instance.dbPassword = canal
+   canal.instance.filter.regex = mydb\\..*  # 监听指定数据库表
+   canal.instance.tsdb.enable=true
+   canal.instance.gtidon=false
+   ```
+
+4. 在Spring中配置：
+
+   引入maven坐标
+
+   ```xml
+   <dependency>
+       <groupId>top.javatool</groupId>
+       <artifactId>canal-spring-boot-starter</artifactId>
+       <version>1.2.1-RELEASE</version>
+   </dependency>
+   ```
+
+   编写配置信息
+
+   ```yaml
+   canal:
+     destination：mydb	#canal实例名称，要跟canal-server运行时设置的destination一致
+     server:192.168.150.101:11111	# canal地址
+   ```
+
+5. 编写监听类，监听Canal消息：
+
+   ```java
+   @CanalTable("tb_item")
+   @Componentpublic 
+   class ItemHandler implements EntryHandler<Item>{
+       
+       @override
+       public void insert(Item item）{
+           //新增数据到redis
+       }
+                          
+       @override
+      	public void update(Item before,Item after）{
+           //更新redis数据
+           //更新本地缓存
+       }
+                          
+      	@override
+   	public void delete(Item item) {
+           //删除redis数据
+           //清理本地缓存
+       }
+   }
+   ```
+
+   

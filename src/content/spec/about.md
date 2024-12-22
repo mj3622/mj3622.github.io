@@ -6,6 +6,11 @@
 - ⚡ 做一些有趣的事
 
 # 项目介绍
+
+>轻小说下载器
+
+::github{repo="mj3622/Wenku8Downloader"}
+
 >
 > PicHub 图床
 
