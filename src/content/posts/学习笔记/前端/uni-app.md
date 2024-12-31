@@ -1,11 +1,15 @@
 ---
-title: 从0开始学习uni-app
+title: uni-app快速上手
 published: 2024-12-29
-description: 在本文将记录如何从0开始，学会使用uni-app的基本用法，并最终用于完成毕业设计项目。
+description: 在本文将记录如何从0开始，学会使用uni-app的基本用法，并最终结合项目需求完成一些简单任务。
 tags: [uni-app]
 category: 学习笔记
 draft: false
 ---
+
+> [!NOTE]
+>
+> 本文的大部分内容源于[uni-app官方教程](https://uniapp.dcloud.net.cn/tutorial/)和[Vue官方教程](https://cn.vuejs.org/guide/introduction.html)的二次整合
 
 # 0. uni-app
 
@@ -914,4 +918,490 @@ watch(
   { deep: true }
 )
 ```
+
+
+
+
+
+# 3. 组件
+
+组件是 Vue（或其他现代框架）中的核心概念之一，表示一个独立、可复用的 UI 单元。它可以包含 HTML 模板、JavaScript 逻辑 和 CSS 样式，用于构建页面的功能模块。在开发中，我们通常将页面拆分为多个组件，每个组件负责独立的功能或展示特定的内容，比如按钮、表单、导航栏等。
+
+
+
+## 3.1 注册组件
+
+在uni-app工程根目录下的 `components` 目录，创建并存放自定义组件：
+
+```
+	│─components            	符合vue组件规范的uni-app组件目录
+	│  └─componentA         	符合‘components/组件名称/组件名称.vue’目录结构，easycom方式可直接使用组件
+	│  		└─componentA.vue    可复用的componentA组件
+	│  └─component-a.vue      可复用的component-a组件
+```
+
+在注册一个组件的时候，我们始终需要给它一个名字。 定义组件名的方式有两种：
+
+- **使用 kebab-case**：当使用 `kebab-case` (短横线分隔命名) 定义一个组件时，你也必须在引用这个自定义元素时使用 `kebab-case`，例如 `<my-component-name>`。
+
+- **使用 PascalCase**：当使用 `PascalCase` (首字母大写命名) 定义一个组件时，你在引用这个自定义元素时两种命名法都可以使用。 也就是说 `<my-component-name>` 和 `<MyComponentName>` 都是可接受的。
+
+
+
+**全局注册：**
+
+`uni-app` 支持配置全局组件，需在 `main.js` 里进行全局注册，注册后就可在所有页面里使用该组件。
+
+1. `main.js` 里进行全局导入和注册
+
+```js
+	import App from './App'
+	import {createSSRApp} from 'vue'
+	//引入组件
+	import myComponent from './components/my-component/my-component.vue'
+	export function createApp() {
+		const app = createSSRApp(App)
+		//调用app.component方法全局注册组件
+		app.component('my-component', myComponent)
+		return {
+			app
+		}
+	}
+```
+
+2. `index.vue` 里可直接使用组件
+
+```html
+	<template>
+		<view>
+			<my-component></my-component>
+		</view>
+	</template>
+```
+
+
+
+**局部注册：**
+
+1. **传统vue规范：** 在 index.vue 页面中，通过 `import` 方式引入组件 ，在 `components` 选项中定义你想要使用的组件。
+
+   对于 `components` 对象中的每个 `property` 来说，其 `property` 名就是自定义元素的名字，其 `property` 值就是这个组件的选项对象。
+
+   在对象中放一个类似 `uniBadge` 的变量名其实是 `uniBadge : uniBadge` 的缩写，即这个变量名同时是：
+
+   - 用在模板中的自定义元素的名称
+   - 包含了这个组件选项的变量名(仅支持驼峰法命名)
+
+```html
+	<!-- 在index.vue引入 uni-badge 组件-->
+	<template>
+		<view>
+			<uni-badge text="1"></uni-badge><!-- 3.使用组件 -->
+		</view>
+	</template>
+	<script>
+		import uniBadge from '@/components/uni-badge/uni-badge.vue';//1.导入组件（这步属于传统vue规范，但在uni-app的easycom下可以省略这步）
+		export default {
+			components:{uniBadge }//2.注册组件（这步属于传统vue规范，但在uni-app的easycom下可以省略这步）
+		}
+	</script>
+```
+
+2. **通过uni-app的easycom：** 将组件引入精简为一步。只要组件安装在项目的 `components` 目录下，并符合 `components/组件名称/组件名称.vue` 目录结构。就可以不用引用、注册，直接在页面中使用。
+
+```html
+	<!-- 在index.vue引入 uni-badge 组件-->
+	<template>
+		<view>
+			<uni-badge text="1"></uni-badge><!-- 3.使用组件 -->
+		</view>
+	</template>
+	<script>
+		// 这里不用import引入，也不需要在components内注册uni-badge组件。template里就可以直接用
+		export default {
+			data() {
+				return {
+				}
+			}
+		}
+	</script>
+```
+
+
+
+## 3.2 props传值
+
+`props` 可以是数组或对象，用于接收来自父组件的数据。`props` 可以是简单的数组，或者使用对象作为替代，对象允许配置高级选项，如类型检测、自定义验证和设置默认值。
+
+| 选项      | 类型                                                         | 说明                                                         |
+| --------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| type      | `String` 、 `Number` 、 `Boolean` 、 `Array` 、 `Object` 、 `Date` 、 `Function` 、 `Symbol` ，任何自定义构造函数、或上述内容组成的数组 | 会检查一个 `prop` 是否是给定的类型，否则抛出警告，复杂数据类型需要通过 `PropType` 标记类型。 |
+| default   | any                                                          | 为该 `prop` 指定一个默认值。如果该 `prop` 没有被传入，则换做用这个值。对象或数组的默认值必须从一个工厂函数返回。 |
+| required  | Boolean                                                      | 定义该 `prop` 是否是必填项。                                 |
+| validator | Function                                                     | 自定义验证函数会将该 `prop` 的值作为唯一的参数代入。在非生产环境下，如果该函数返回一个 `false` 的值 (也就是验证失败)，一个控制台警告将会被抛出。 |
+
+**使用示例：**
+
+```vue
+<template>
+	<view class="user-info">
+		<image :src="user.avatar" mode="aspectFill"></image>
+		<text> 用户名：{{user.name}} </text>
+	</view>
+</template>
+
+<script setup>
+	defineProps({
+		user: {
+			type: Object,
+			default () {
+				return {
+					name: "游客",
+					avatar: "../../../static/avatar.jpg"
+				}
+			}
+		}
+
+	});
+</script>
+
+<style lang="scss" scoped>
+	.user-info {
+		display: flex;
+		align-items: center;
+		flex-direction: column;
+		padding: 10px;
+		background-color: #eee;
+		border-bottom: 1px solid #f0f0f0;
+		margin: 10px;
+	}
+
+	.user-info image {
+		width: 100px;
+		height: 100px;
+		margin: 10px 0;
+
+		border-radius: 50%;
+	}
+
+	.user-info text {
+		font-size: 16px;
+	}
+</style>
+```
+
+
+
+## 3.3 插槽
+
+**插槽内容**
+
+插槽（Slot） 是 Vue 提供的一种机制，允许父组件向子组件传递自定义内容，并在子组件的特定位置进行渲染。插槽的主要用途是让子组件更加灵活和通用，适用于需要动态内容的场景。
+
+它允许你像这样合成组件：
+
+```html
+	<todo-button>
+		Add todo
+	</todo-button>
+```
+
+然后在 `todo-button` 的模板中，你可能有：
+
+```html
+	<!-- todo-button 组件模板 -->
+	<button class="btn-primary">
+		<slot></slot>
+	</button>
+```
+
+当组件渲染的时候，将会被替换为`“Add Todo”`。
+
+```html
+	<!-- 渲染 HTML -->
+	<button class="btn-primary">
+		Add todo
+	</button>
+```
+
+
+
+**后备内容**
+
+有时为一个插槽设置具体的后备 (也就是默认的) 内容是很有用的，它只会在没有提供内容的时候被渲染。例如在一个 `submit-button` 组件中，我们可能希望这个 `button` 内绝大多数情况下都渲染文本`“Submit”`。为了将`“Submit”`作为后备内容，我们可以将它放在 `slot` 标签内：
+
+```html
+	<button type="submit">
+		<slot>Submit</slot>
+	</button>
+```
+
+现在当我在一个父级组件中使用 `submit-button` 并且不提供任何插槽内容时，后备内容“Submit”将会被渲染：
+
+```html
+    <button type="submit">
+        Submit
+    </button>
+```
+
+但是如果我们提供内容：
+
+```html
+	<submit-button>
+		Save
+	</submit-button>
+```
+
+则这个提供的内容将会被渲染从而取代后备内容：
+
+```html
+	<button type="submit">
+		Save
+	</button>
+```
+
+
+
+**具名插槽**
+
+有时我们需要多个插槽，对于这样的情况，`slot` 元素有一个特殊的 `attribute：name`。这个 `attribute` 可以用来定义额外的插槽：
+
+```html
+<view class="container">
+	<header>
+		<slot name="header"></slot>
+	</header>
+	<main>
+		<slot></slot>
+	</main>
+	<footer>
+		<slot name="footer"></slot>
+	</footer>
+</view>
+```
+
+一个不带 `name` 的 `slot` 出口会带有隐含的名字`default`。在向具名插槽提供内容的时候，我们可以在一个 `template` 元素上使用 `v-slot` 指令，并以 `v-slot` 的参数的形式提供其名称：
+
+```html
+<template>
+	<view>
+	<!-- 父组件使用子组件`<base-layout>`，节点上使用v-slot特性： -->
+		<base-layout>
+			<template v-slot:header>
+				<view>Here might be a page title</view>
+			</template>
+			<template v-slot:default>
+				<view>A paragraph for the main content.</view>
+				<view>And another one.</view>
+			</template>
+			<template v-slot:footer>
+				<view>Here's some contact info</view>
+			</template>
+		</base-layout>
+	</view>
+</template>
+```
+
+跟 `v-on` 和 `v-bind` 一样，`v-slot` 也有缩写，即把参数之前的所有内容 (v-slot:) 替换为字符 **#**。例如 `v-slot:header` 可以被重写为 `#header`：
+
+```html
+<base-layout>
+	<template #header>
+		<view>Here might be a page title</view>
+	</template>
+
+	<template #default>
+		<view>A paragraph for the main content.</view>
+		<view>And another one.</view>
+	</template>
+
+	<template #footer>
+		<view>Here's some contact info</view>
+	</template>
+</base-layout>
+```
+
+
+
+## 3.4 emit
+
+`emit` 是一种用于实现父子组件通信的机制。通过 `emit`，子组件可以向父组件发送事件，父组件可以监听这些事件并作出响应。
+
+
+
+**示例：**
+
+子组件代码
+
+```vue
+<template>
+  <button @click="handleClick">点击我</button>
+</template>
+
+<script setup>
+const emit = defineEmits(['customEvent']); // 定义事件
+
+const handleClick = () => {
+  emit('customEvent', 'Hello from child!'); // 触发事件，并传递数据
+};
+</script>
+```
+
+
+
+父组件代码
+
+```vue
+<template>
+  <ChildComponent @customEvent="handleEvent" />
+</template>
+
+<script setup>
+import ChildComponent from './ChildComponent.vue';
+
+const handleEvent = (message) => {
+  console.log('父组件接收到消息:', message);
+};
+</script>
+```
+
+
+
+## 3.5 expose
+
+在 Vue 3 的 `<script setup>` 语法中，`defineExpose` 用于显式地向父组件暴露子组件的属性或方法。这让父组件可以通过 `ref` 访问子组件中的指定内容。
+
+
+
+**使用示例：**
+
+子组件
+
+```vue
+<template>
+  <button @click="increment">点击增加</button>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const count = ref(0);
+
+const increment = () => {
+  count.value++;
+};
+
+// 显式暴露 count 和 increment 给父组件
+defineExpose({
+  count,
+  increment,
+});
+</script>
+```
+
+父组件
+
+```vue
+<template>
+  <ChildComponent ref="childRef" />
+  <button @click="logCount">获取子组件计数</button>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import ChildComponent from './ChildComponent.vue';
+
+const childRef = ref(null);
+
+const logCount = () => {
+  console.log('子组件计数值:', childRef.value.count); // 访问子组件的 count
+  childRef.value.increment(); // 调用子组件的方法
+};
+</script>
+```
+
+
+
+## 3.6 组件生命周期
+
+Vue 3 中的生命周期指组件从创建到销毁的完整过程，包括初始化、渲染、更新、销毁等阶段。Vue 提供了一系列生命周期钩子函数，让开发者可以在特定的时刻执行逻辑。
+
+
+
+### 生命周期阶段
+
+1. **创建阶段**
+   组件实例初始化，各种属性如 `props`、`data` 等被设置。
+2. **挂载阶段**
+   模板编译为虚拟 DOM 并插入真实 DOM。
+3. **更新阶段**
+   当响应式数据发生变化时，组件会重新渲染并更新 DOM。
+4. **销毁阶段**
+   组件实例被销毁，清理资源。
+
+
+
+### 生命周期钩子函数
+
+**创建阶段**
+
+| 钩子函数        | 说明                                                         |
+| --------------- | ------------------------------------------------------------ |
+| `setup()`       | 组件初始化时调用。组合式 API 的入口点，定义响应式数据、方法等。 |
+| `onBeforeMount` | 在组件挂载到 DOM 之前调用。适合执行初始化逻辑，但此时无 DOM 结构。 |
+| `onMounted`     | 组件挂载完成后调用。此时 DOM 可用，常用于操作 DOM 或发送请求。 |
+
+**更新阶段**
+
+| 钩子函数         | 说明                                          |
+| ---------------- | --------------------------------------------- |
+| `onBeforeUpdate` | 组件更新前调用，数据已变化，但 DOM 尚未更新。 |
+| `onUpdated`      | 组件更新完成后调用，此时 DOM 已更新。         |
+
+**销毁阶段**
+
+| 钩子函数          | 说明                                           |
+| ----------------- | ---------------------------------------------- |
+| `onBeforeUnmount` | 组件销毁前调用，适合清理资源。                 |
+| `onUnmounted`     | 组件销毁后调用，所有数据和事件监听器已被移除。 |
+
+
+
+以下是一个组件示例，展示了常用的生命周期钩子函数：
+
+```vue
+<template>
+  <div>
+    <p>计数：{{ count }}</p>
+    <button @click="increment">增加</button>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUpdated, onUnmounted } from 'vue';
+
+const count = ref(0);
+
+const increment = () => {
+  count.value++;
+};
+
+// 在组件挂载时执行
+onMounted(() => {
+  console.log('组件已挂载');
+});
+
+// 在组件更新时执行
+onUpdated(() => {
+  console.log('组件已更新，当前计数：', count.value);
+});
+
+// 在组件销毁时执行
+onUnmounted(() => {
+  console.log('组件已销毁');
+});
+</script>
+```
+
+
 
