@@ -299,3 +299,48 @@ I have 5 apples and 10.50 dollars.
 - `matches(String regex)`：检查字符串是否完全匹配正则表达式。
 - `replaceAll(String regex, String replacement)`：替换所有匹配的部分。
 - `replaceFirst(String regex, String replacement)`：替换第一个匹配的部分。
+
+
+
+
+
+### 3.2 队列
+
+### 1. 优先队列
+
+在 Java 中，`PriorityQueue` 是一个基于优先级的队列，位于 `java.util` 包中。它实现了 Queue 接口，是一个最小堆（min-heap）的实现，用于按优先级顺序存储元素。
+
+- 元素的优先顺序由其自然顺序（`Comparable` 实现）或自定义比较器（`Comparator`）决定。
+- 队列的头部是按优先级排序的最小元素。
+
+
+
+**常用方法**
+
+| 方法                         | 说明                                                         |
+| ---------------------------- | ------------------------------------------------------------ |
+| `boolean add(E e)`           | 添加元素到队列中，若容量不足会扩容。                         |
+| `boolean offer(E e)`         | 与 `add` 类似，但更适合在容量受限时使用，提供失败时返回 `false`。 |
+| `E poll()`                   | 获取并移除队列头部元素，若队列为空，返回 `null`。            |
+| `E peek()`                   | 获取但不移除队列头部元素，若队列为空，返回 `null`。          |
+| `boolean remove(Object o)`   | 移除队列中指定的元素，若存在返回 `true`，否则返回 `false`。  |
+| `boolean contains(Object o)` | 检查队列中是否包含指定元素。                                 |
+| `int size()`                 | 返回队列中的元素数量。                                       |
+| `void clear()`               | 清空队列。                                                   |
+
+
+
+**自定义排序**
+
+```java
+// lambda表达式
+PriorityQueue<Integer> pq = new PriorityQueue<>(
+    (a, b) -> a - b)
+);
+```
+
+返回值含义：
+
+1. **负值**（`< 0`）：表示 `a` 的优先级 **小于** `b`，即 `a` 排在 `b` 前面。
+2. **零**（`== 0`）：表示 `a` 和 `b` 的优先级 **相等**，它们的相对顺序可以视为相同。
+3. **正值**（`> 0`）：表示 `a` 的优先级 **大于** `b`，即 `a` 排在 `b` 后面。

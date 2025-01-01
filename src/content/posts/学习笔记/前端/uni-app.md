@@ -1405,3 +1405,635 @@ onUnmounted(() => {
 
 
 
+# 4. 页面相关
+
+## 4.1 css语法
+
+### 1. rpx
+
+`rpx` 是 **uni-app** 中用于页面布局的一种响应式单位，全称为 “responsive pixel”，即“响应式像素”。它通过动态计算屏幕宽度，自动适配不同设备，特别适用于多屏适配需求的场景。
+
+`rpx` 会根据设备屏幕宽度的不同而自动调整实际的像素值。例如：
+
+- 在屏幕宽度为 750px 的设备上，1rpx 等于 1px。
+- 在屏幕宽度为 375px 的设备上，1rpx 等于 0.5px。
+
+
+
+### 2. 样式导入
+
+我们可以将样式等文件单独抽离出来成一个文件，当需要使用的时候再进行导入。可以在根目录下创建一个`common`文件夹，用于存储这些文件，这样只有在使用到的时候这些文件才会被打包进去，从而节省空间。
+
+```
+─common              
+  └─css		存储css文件
+  └─scss		存储scss文件
+  └─js			存储js文件
+```
+
+
+
+**样式引入：**
+
+```css
+<style lang="scss">
+@import  "@/common/css/my.css";
+</style>
+```
+
+
+
+**scss:**
+
+在根目录中的`uni.scss`文件中，定义了一系列的常用样式变量。同样的，我们可以在里面导入我们自定义的变量来使用
+
+```scss
+@import "@/common/scss/my.scss";
+```
+
+
+
+## 4.2 pages.json 页面路由
+
+### 1. globalStyle
+
+用于设置应用的状态栏、导航条、标题、窗口背景色等。
+
+**常用属性：**
+
+| 属性                         | 类型     | 默认值  | 描述                                                         |
+| :--------------------------- | :------- | :------ | :----------------------------------------------------------- |
+| navigationBarBackgroundColor | HexColor | #F8F8F8 | 导航栏背景颜色（同状态栏背景色）                             |
+| navigationBarTextStyle       | String   | black   | 导航栏标题颜色及状态栏前景颜色，仅支持 black/white           |
+| navigationBarTitleText       | String   |         | 导航栏标题文字内容                                           |
+| navigationStyle              | String   | default | 导航栏样式，仅支持 default/custom。custom即取消默认的原生导航栏 |
+| enablePullDownRefresh        | Boolean  | false   | 是否开启下拉刷新，详见[页面生命周期](https://uniapp.dcloud.net.cn/tutorial/page.html#lifecycle)。 |
+| onReachBottomDistance        | Number   | 50      | 页面上拉触底事件触发时距页面底部距离，单位只支持px，详见[页面生命周期](https://uniapp.dcloud.net.cn/tutorial/page.html#lifecycle) |
+
+
+
+### 2. tabBar
+
+如果应用是一个多 tab 应用，可以通过 tabBar 配置项指定一级导航栏，以及 tab 切换时显示的对应页。
+
+**常用属性：**
+
+| 属性            | 类型     | 必填 | 默认值 | 描述                                                 |
+| :-------------- | :------- | :--- | :----- | :--------------------------------------------------- |
+| color           | HexColor | 是   |        | tab 上的文字默认颜色                                 |
+| selectedColor   | HexColor | 是   |        | tab 上的文字选中时的颜色                             |
+| backgroundColor | HexColor | 是   |        | tab 的背景色                                         |
+| list            | Array    | 是   |        | tab 的列表，详见 list 属性说明，最少2个、最多5个 tab |
+| fontSize        | String   | 否   | 10px   | 文字默认大小                                         |
+
+
+
+其中 list 接收一个数组，数组中的每个项都是一个对象，其属性值如下：
+
+| 属性             | 类型   | 必填 | 说明                                                         |
+| :--------------- | :----- | :--- | :----------------------------------------------------------- |
+| pagePath         | String | 是   | 页面路径，必须在 pages 中先定义                              |
+| text             | String | 是   | tab 上按钮文字，在 App 和 H5 平台为非必填。例如中间可放一个没有文字的+号图标 |
+| iconPath         | String | 否   | 图片路径，icon 大小限制为40kb，建议尺寸为 81px * 81px，当 position 为 top 时，此参数无效，不支持网络图片，不支持字体图标 |
+| selectedIconPath | String | 否   | 选中时的图片路径，icon 大小限制为40kb，建议尺寸为 81px * 81px ，当 position 为 top 时，此参数无效 |
+
+
+
+## 4.3 交互反馈
+
+### 1. showToast
+
+`uni.showToast(OBJECT)`用于显示消息提示框。
+
+| 参数     | 类型    | 必填 | 说明                                        |
+| :------- | :------ | :--- | :------------------------------------------ |
+| title    | String  | 是   | 提示的内容，长度与 icon 取值有关。          |
+| icon     | String  | 否   | 图标，有效值详见下方说明，默认：success。   |
+| image    | String  | 否   | 自定义图标的本地路径（app端暂不支持gif）    |
+| mask     | Boolean | 否   | 是否显示透明蒙层，防止触摸穿透，默认：false |
+| duration | Number  | 否   | 提示的延迟时间，单位毫秒，默认：1500        |
+
+
+
+**使用示例：**
+
+```vue
+<template>
+    <view class="">
+		<button @click="onClick()">弹出提示框</button>
+    </view>
+</template>
+
+<script setup>
+	function onClick() {
+		uni.showToast({
+			title: 'Hello World',
+			icon: 'success'
+		})
+	}
+</script>
+```
+
+![image-20250101162445989](./assets/image-20250101162445989.png)
+
+
+
+### 2. showLoading
+
+`uni.showLoading(OBJECT)`用于显示 loading 提示框, 需主动调用 `uni.hideLoading` 才能关闭提示框。
+
+| 参数     | 类型     | 必填 | 说明                                             |
+| :------- | :------- | :--- | :----------------------------------------------- |
+| title    | String   | 是   | 提示的文字内容，显示在loading的下方              |
+| mask     | Boolean  | 否   | 是否显示透明蒙层，防止触摸穿透，默认：false      |
+| success  | Function | 否   | 接口调用成功的回调函数                           |
+| fail     | Function | 否   | 接口调用失败的回调函数                           |
+| complete | Function | 否   | 接口调用结束的回调函数（调用成功、失败都会执行） |
+
+**使用示例：**
+
+```vue
+<template>
+	<view class="">
+		<button @click="onClick()">弹出提示框</button>
+	</view>
+</template>
+
+<script setup>
+	function onClick() {
+		uni.showLoading({
+			title: '加载中'
+		})
+	}
+</script>
+```
+
+![image-20250101163400062](./assets/image-20250101163400062.png)
+
+
+
+### 3. showModal
+
+`uni.showModal(OBJECT)`显示模态弹窗，可以只有一个确定按钮，也可以同时有确定和取消按钮。
+
+| 参数            | 类型     | 必填 | 说明                                                         |
+| :-------------- | :------- | :--- | :----------------------------------------------------------- |
+| title           | String   | 否   | 提示的标题                                                   |
+| content         | String   | 否   | 提示的内容                                                   |
+| showCancel      | Boolean  | 否   | 是否显示取消按钮，默认为 true                                |
+| cancelText      | String   | 否   | 取消按钮的文字，默认为"取消"                                 |
+| cancelColor     | HexColor | 否   | 取消按钮的文字颜色，默认为"#000000"                          |
+| confirmText     | String   | 否   | 确定按钮的文字，默认为"确定"                                 |
+| confirmColor    | HexColor | 否   | 确定按钮的文字颜色，H5平台默认为"#007aff"，微信小程序平台默认为"#576B95"，百度小程序平台默认为"#3c76ff" |
+| editable        | Boolean  | 否   | 是否显示输入框                                               |
+| placeholderText | String   | 否   | 显示输入框时的提示文本                                       |
+| success         | Function | 否   | 接口调用成功的回调函数                                       |
+| fail            | Function | 否   | 接口调用失败的回调函数                                       |
+| complete        | Function | 否   | 接口调用结束的回调函数（调用成功、失败都会执行）             |
+
+
+
+**使用示例：**
+
+```vue
+<template>
+	<view class="">
+		<button @click="onClick()">弹出提示框</button>
+	</view>
+</template>
+
+<script setup>
+	function onClick() {
+		uni.showModal({
+			title: '提示',
+			content: '这是一个模态弹窗',
+			showCancel: true,
+			cancelText: '取消',
+			confirmText: '确定',
+			success: function(res) {
+				if (res.confirm) {
+					console.log('用户点击确定');
+				} else if (res.cancel) {
+					console.log('用户点击取消');
+				}
+			}
+		})
+	}
+</script>
+```
+
+![image-20250101162654571](./assets/image-20250101162654571.png)
+
+
+
+### 4. showActionSheet
+
+`uni.showActionSheet(OBJECT)`用于生成从底部向上弹出操作菜单。
+
+
+
+**OBJECT参数说明**
+
+| 参数     | 类型            | 必填 | 说明                                             |
+| :------- | :-------------- | :--- | :----------------------------------------------- |
+| title    | String          | 否   | 菜单标题                                         |
+| itemList | `Array<String>` | 是   | 按钮的文字数组                                   |
+| success  | Function        | 否   | 接口调用成功的回调函数，详见返回参数说明         |
+| fail     | Function        | 否   | 接口调用失败的回调函数                           |
+| complete | Function        | 否   | 接口调用结束的回调函数（调用成功、失败都会执行） |
+
+
+
+**使用示例：**
+
+```vue
+<template>
+	<view class="">
+		<button @click="onClick()">弹出提示框</button>
+		<text>您选择了：{{selected}}</text>
+	</view>
+</template>
+
+<script setup>
+	let list = ["学士", "硕士", "博士"]
+	let selected = ref("")
+	function onClick() {
+		uni.showActionSheet({
+			itemList: list,
+			success: function(res) {
+				console.log('选中了第' + (res.tapIndex + 1) + '个按钮');
+				console.log(list[res.tapIndex]);
+				selected.value = list[res.tapIndex]
+			}
+		});
+	}
+</script>
+```
+
+![image-20250101164727515](./assets/image-20250101164727515.png)
+
+
+
+## 4.4 设置导航条
+
+`uni.setNavigationBarTitle(OBJECT)`动态设置当前页面的标题。
+
+| 参数     | 类型     | 必填 | 说明                                             |
+| :------- | :------- | :--- | :----------------------------------------------- |
+| title    | String   | 是   | 页面标题                                         |
+| success  | Function | 否   | 接口调用成功的回调函数                           |
+| fail     | Function | 否   | 接口调用失败的回调函数                           |
+| complete | Function | 否   | 接口调用结束的回调函数（调用成功、失败都会执行） |
+
+
+
+**使用示例：**
+
+```javascript
+uni.setNavigationBarTitle({
+	title: '新的标题'
+});
+```
+
+
+
+## 4.5 设置TabBar
+
+### 1. tabBar文本
+
+`uni.setTabBarBadge(OBJECT)`为 tabBar 某一项的右上角添加文本。
+
+| 参数     | 类型     | 必填 | 说明                                             |
+| :------- | :------- | :--- | :----------------------------------------------- |
+| index    | Number   | 是   | tabBar的哪一项，从左边算起                       |
+| text     | String   | 是   | 显示的文本，不超过 3 个半角字符                  |
+| success  | Function | 否   | 接口调用成功的回调函数                           |
+| fail     | Function | 否   | 接口调用失败的回调函数                           |
+| complete | Function | 否   | 接口调用结束的回调函数（调用成功、失败都会执行） |
+
+**使用示例：**
+
+```vue
+uni.setTabBarBadge({
+  index: 0,
+  text: '1'
+})
+```
+
+
+
+`uni.removeTabBarBadge(OBJECT)`移除 tabBar 某一项右上角的文本。
+
+| 参数     | 类型     | 必填 | 说明                                             |
+| :------- | :------- | :--- | :----------------------------------------------- |
+| index    | Number   | 是   | tabBar的哪一项，从左边算起                       |
+| success  | Function | 否   | 接口调用成功的回调函数                           |
+| fail     | Function | 否   | 接口调用失败的回调函数                           |
+| complete | Function | 否   | 接口调用结束的回调函数（调用成功、失败都会执行） |
+
+
+
+### 2. tabBar红点
+
+`uni.showTabBarRedDot(OBJECT)`显示 tabBar 某一项的右上角的红点。
+
+| 参数     | 类型     | 必填 | 说明                                             |
+| :------- | :------- | :--- | :----------------------------------------------- |
+| index    | Number   | 是   | tabBar的哪一项，从左边算起                       |
+| success  | Function | 否   | 接口调用成功的回调函数                           |
+| fail     | Function | 否   | 接口调用失败的回调函数                           |
+| complete | Function | 否   | 接口调用结束的回调函数（调用成功、失败都会执行） |
+
+
+
+`uni.hideTabBarRedDot(OBJECT)`隐藏 tabBar 某一项的右上角的红点。
+
+| 参数     | 类型     | 必填 | 说明                                             |
+| :------- | :------- | :--- | :----------------------------------------------- |
+| index    | Number   | 是   | tabBar的哪一项，从左边算起                       |
+| success  | Function | 否   | 接口调用成功的回调函数                           |
+| fail     | Function | 否   | 接口调用失败的回调函数                           |
+| complete | Function | 否   | 接口调用结束的回调函数（调用成功、失败都会执行） |
+
+
+
+## 4.6 下拉刷新
+
+在 js 中定义 `onPullDownRefresh` 处理函数（和`onLoad`等生命周期函数同级），监听该页面用户下拉刷新事件。
+
+- 需要在 pages.json 里，找到的当前页面的pages节点，并在 style 选项中开启 enablePullDownRefresh。
+- 当处理完数据刷新后，`uni.stopPullDownRefresh` 可以停止当前页面的下拉刷新。
+
+
+
+`uni.startPullDownRefresh(OBJECT)`：开始下拉刷新，调用后触发下拉刷新动画，效果与用户手动下拉刷新一致。
+
+| 参数名   | 类型     | 必填 | 说明                                             |
+| :------- | :------- | :--- | :----------------------------------------------- |
+| success  | Function | 否   | 接口调用成功的回调                               |
+| fail     | Function | 否   | 接口调用失败的回调函数                           |
+| complete | Function | 否   | 接口调用结束的回调函数（调用成功、失败都会执行） |
+
+
+
+## 4.7 跳转和路由
+
+- `uni.navigateTo(OBJECT)`：保留当前页面，跳转到应用内的某个页面，使用uni.navigateBack可以返回到原页面。
+- `uni.redirectTo(OBJECT)`：关闭当前页面，跳转到应用内的某个页面。
+- `uni.reLaunch(OBJECT)`：关闭所有页面，打开到应用内的某个页面。
+- `uni.switchTab(OBJECT)`：跳转到 tabBar 页面，并关闭其他所有非 tabBar 页面。
+
+
+
+## 4.8 数据缓存
+
+### 1. **`uni.setStorage` 和 `uni.getStorage`**
+
+- **`uni.setStorage`**: 用于将数据存储到本地缓存中。
+- **`uni.getStorage`**: 用于从本地缓存中获取数据。
+
+```
+// 存储数据
+uni.setStorage({
+    key: 'key_name',
+    data: 'value',
+    success: function () {
+        console.log('存储成功');
+    }
+});
+
+// 获取数据
+uni.getStorage({
+    key: 'key_name',
+    success: function (res) {
+        console.log('获取到的数据:', res.data);
+    }
+});
+```
+
+
+
+### 2. **`uni.setStorageSync` 和 `uni.getStorageSync`**
+
+- **`uni.setStorageSync`**: 同步方式将数据存储到本地缓存中。
+- **`uni.getStorageSync`**: 同步方式从本地缓存中获取数据。
+
+
+
+**注意事项：**
+
+- 存储的数据可以是任意类型，但最终会以字符串形式存储。
+- 存储的数据大小有限制，通常为 10MB 左右，具体限制因平台而异。
+- 存储的数据在应用卸载后会被清除。
+- 存储的数据是明文存储的，因此不建议存储敏感信息（如密码、token 等）。
+
+```javascript
+// 存储数据
+try {
+    uni.setStorageSync('key_name', 'value');
+    console.log('存储成功');
+} catch (e) {
+    console.error('存储失败:', e);
+}
+
+// 获取数据
+try {
+    const value = uni.getStorageSync('key_name');
+    console.log('获取到的数据:', value);
+} catch (e) {
+    console.error('获取失败:', e);
+}
+```
+
+
+
+### 3. **`uni.removeStorage` 和 `uni.removeStorageSync`**
+
+- **`uni.removeStorage`**: 异步方式从本地缓存中移除指定 key 的数据。
+- **`uni.removeStorageSync`**: 同步方式从本地缓存中移除指定 key 的数据。
+
+```javascript
+// 异步移除数据
+uni.removeStorage({
+    key: 'key_name',
+    success: function () {
+        console.log('移除成功');
+    }
+});
+
+// 同步移除数据
+try {
+    uni.removeStorageSync('key_name');
+    console.log('移除成功');
+} catch (e) {
+    console.error('移除失败:', e);
+}
+```
+
+
+
+### 4. **`uni.clearStorage` 和 `uni.clearStorageSync`**
+
+- **`uni.clearStorage`**: 异步方式清除本地缓存中的所有数据。
+- **`uni.clearStorageSync`**: 同步方式清除本地缓存中的所有数据。
+
+```javascript
+// 异步清除所有缓存
+uni.clearStorage({
+    success: function () {
+        console.log('清除成功');
+    }
+});
+
+// 同步清除所有缓存
+try {
+    uni.clearStorageSync();
+    console.log('清除成功');
+} catch (e) {
+    console.error('清除失败:', e);
+}
+```
+
+
+
+### 5. **`uni.getStorageInfo` 和 `uni.getStorageInfoSync`**
+
+- **`uni.getStorageInfo`**: 异步方式获取当前缓存的相关信息。
+- **`uni.getStorageInfoSync`**: 同步方式获取当前缓存的相关信息。
+
+```javascript
+// 异步获取缓存信息
+uni.getStorageInfo({
+    success: function (res) {
+        console.log('缓存信息:', res);
+    }
+});
+
+// 同步获取缓存信息
+try {
+    const info = uni.getStorageInfoSync();
+    console.log('缓存信息:', info);
+} catch (e) {
+    console.error('获取缓存信息失败:', e);
+}
+```
+
+
+
+## 4.9 网络请求
+
+### 1. request
+
+`uni.request` 是 UniApp 中用于发起网络请求的 API
+
+**参数说明**
+
+| 参数名         | 类型       | 必填 | 说明                                                         |
+| :------------- | :--------- | :--- | :----------------------------------------------------------- |
+| `url`          | `string`   | 是   | 请求地址，必须是完整的 HTTP/HTTPS 地址。                     |
+| `method`       | `string`   | 否   | 请求方法，默认为 `GET`，支持 `GET`、`POST`、`PUT`、`DELETE` 等。 |
+| `data`         | `object`   | 否   | 请求参数，可以是对象或字符串。                               |
+| `header`       | `object`   | 否   | 请求头，可以设置 `Content-Type`、`Authorization` 等。        |
+| `timeout`      | `number`   | 否   | 超时时间，单位为毫秒，默认为 60000（60 秒）。                |
+| `dataType`     | `string`   | 否   | 返回数据的格式，默认为 `json`，支持 `json`、`text` 等。      |
+| `responseType` | `string`   | 否   | 响应数据类型，默认为 `text`，支持 `text`、`arraybuffer` 等。 |
+| `success`      | `function` | 否   | 请求成功的回调函数，参数为响应结果。                         |
+| `fail`         | `function` | 否   | 请求失败的回调函数，参数为错误信息。                         |
+| `complete`     | `function` | 否   | 请求完成的回调函数（无论成功或失败都会执行）。               |
+
+
+
+**返回值**
+
+`uni.request` 的 `success` 回调函数会返回一个响应对象，包含以下字段：
+
+| 字段名       | 类型     | 说明                                                 |
+| :----------- | :------- | :--------------------------------------------------- |
+| `data`       | `any`    | 响应数据，类型由 `dataType` 和 `responseType` 决定。 |
+| `statusCode` | `number` | HTTP 状态码，如 200、404 等。                        |
+| `header`     | `object` | 响应头。                                             |
+| `cookies`    | `array`  | 响应中的 cookies（仅 H5 平台支持）。                 |
+
+**使用示例**
+
+```javascript
+uni.request({
+    url: 'https://example.com/api/data', // 请求地址
+    method: 'GET', // 请求方法，默认为 GET
+    data: { // 请求参数
+        key1: 'value1',
+        key2: 'value2'
+    },
+    header: { // 请求头
+        'Content-Type': 'application/json'
+    },
+    success: (res) => { // 请求成功回调
+        console.log('请求成功:', res.data);
+    },
+    fail: (err) => { // 请求失败回调
+        console.error('请求失败:', err);
+    },
+    complete: () => { // 请求完成回调（无论成功或失败）
+        console.log('请求完成');
+    }
+});
+```
+
+
+
+### 2. Promise 
+
+Promise 是 JavaScript 中用于处理异步操作的对象，它可以将异步操作转换为链式调用，避免回调地狱（Callback Hell），使代码更易读和维护。
+
+**三种状态**:
+
+- **Pending**: 初始状态，表示异步操作尚未完成。
+- **Fulfilled**: 操作成功完成。
+- **Rejected**: 操作失败。
+
+
+
+在uniapp中使用 Promise 发送网络请求：
+
+```javascript
+function request(url, method = 'GET', data = {}) {
+    return new Promise((resolve, reject) => {
+        uni.request({
+            url,
+            method,
+            data,
+            success: (res) => resolve(res.data),
+            fail: (err) => reject(err)
+        });
+    });
+}
+
+// 使用
+request('https://example.com/api/data')
+    .then(data => console.log('请求成功:', data))
+    .catch(err => console.error('请求失败:', err));
+```
+
+###  
+
+**使用 `async/await` 简化 Promise**
+
+`async/await` 是 Promise 的语法糖，可以让异步代码看起来像同步代码，更易读和维护。
+
+使用示例：
+
+```javascript
+async function get() {
+    try {
+        const res = await uni.request({
+            url: "https://jsonplaceholder.typicode.com/posts"
+        });
+        console.log(res);
+    } catch (e) {
+        console.log(e)
+    }
+}
+
+get()
+```
+
