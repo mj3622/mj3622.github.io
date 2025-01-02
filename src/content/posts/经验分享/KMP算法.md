@@ -1,7 +1,7 @@
 ---
 title: KMP算法
 published: 2025-01-01
-description: 本文将介绍介绍KMP算法的流程，并使用Java进行实现。
+description: 本文将介绍介绍字符串匹配领域中KMP算法的流程，并使用Java进行实现。
 tags: [算法]
 category: 经验分享
 draft: false
@@ -43,7 +43,7 @@ public static int bruteForce(String text, String pattern) {
 
 
 
-#2. KMP算法
+# 2. KMP算法
 
 **KMP算法（Knuth-Morris-Pratt算法）** 是一种用于字符串匹配的高效算法。它的核心思想是通过预处理模式串（pattern），构建一个部分匹配表（也称为 失败函数 或 next数组 ），从而在匹配过程中避免不必要的回溯，提高匹配效率。
 
