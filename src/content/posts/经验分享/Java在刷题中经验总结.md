@@ -304,7 +304,7 @@ I have 5 apples and 10.50 dollars.
 
 
 
-### 3.2 队列
+## 3.2 队列
 
 ### 1. 优先队列
 
@@ -344,3 +344,15 @@ PriorityQueue<Integer> pq = new PriorityQueue<>(
 1. **负值**（`< 0`）：表示 `a` 的优先级 **小于** `b`，即 `a` 排在 `b` 前面。
 2. **零**（`== 0`）：表示 `a` 和 `b` 的优先级 **相等**，它们的相对顺序可以视为相同。
 3. **正值**（`> 0`）：表示 `a` 的优先级 **大于** `b`，即 `a` 排在 `b` 后面。
+
+
+
+## 3.3 流处理
+
+### 1. 将集合转化成数组
+
+```java
+ArrayList<Integer> list = new ArrayList<>();
+int[] array = list.stream().mapToInt(Integer::intValue).toArray();
+```
+
