@@ -3,7 +3,7 @@ title: Session在Web服务中的应用
 published: 2024-12-14
 description: 本文将以Spring Boot作为后端，介绍Session在Web服务中的使用与注意事项
 tags: [Web]
-category: 技术栈
+category: 编程实践
 draft: false
 ---
 
@@ -293,5 +293,4 @@ Session的生命周期可能过长或过短：
 
 - 配置Session的自动清理机制。
 - 使用外部存储（如Redis）时，利用其过期策略清理过时的Session。
-
 

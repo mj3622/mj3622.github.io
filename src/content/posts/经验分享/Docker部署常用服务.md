@@ -168,30 +168,7 @@ draft: false
 
 # 3. 部署常见服务
 
-## 3.1 Nginx
-
-### 1. 拉取镜像
-
-
-
-### 2. 创建并运行容器
-
-```bash
-docker run -d \
-  --name nginx \
-  -p 80:80 \
-  -p 443:443 \
-  -v ./nginx.conf:/etc/nginx/nginx.conf \
-  -v ./html:/usr/share/nginx/html \
-  -v ./ssl:/etc/nginx/ssl \
-  -v ./logs:/var/log/nginx \
-  --restart unless-stopped \
-  nginx
-```
-
-
-
-### 3. 验证部署
+### 
 
 ## 3.1 Nginx
 

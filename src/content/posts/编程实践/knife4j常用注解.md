@@ -3,7 +3,7 @@ title: Swagger2常用注解
 published: 2025-04-17
 description: Swagger是一套用于描述和文档化RESTful API的规范，通过注解可以方便地生成API文档。本文将介绍其在Java开发中的常用注解，以便开发时使用。
 tags: [Web]
-category: 技术栈
+category: 编程实践
 draft: false
 ---
 
