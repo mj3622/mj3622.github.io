@@ -16,12 +16,12 @@ export const siteConfig: SiteConfig = {
   },
   banner: {
     enable: true,
-    src: 'assets/images/banner8.jpg',   // Relative to the /src directory. Relative to the /public directory if it starts with '/'
-    position: 'center',      // Equivalent to object-position, only supports 'top', 'center', 'bottom'. 'center' by default
+    src: 'assets/images/banner9.jpg',   // Relative to the /src directory. Relative to the /public directory if it starts with '/'
+    position: 'top',      // Equivalent to object-position, only supports 'top', 'center', 'bottom'. 'center' by default
     credit: {
       enable: true,         // Display the credit text of the banner image
-      text: '薬屋 | iren',              // Credit text to be displayed
-      url: 'https://www.pixiv.net/artworks/79834784'                // (Optional) URL link to the original artwork or artist's page
+      text: '天使的星期日',              // Credit text to be displayed
+      // url: 'https://www.pixiv.net/artworks/79834784'                // (Optional) URL link to the original artwork or artist's page
     }
   },
   toc: {
@@ -75,6 +75,11 @@ export const profileConfig: ProfileConfig = {
       icon: 'fa6-brands:github',
       url: 'https://github.com/mj3622',
     },
+    {
+    name: '简历',
+    icon: 'material-symbols:description', // 文档图标
+    url: "/resume.pdf"
+    }
   ],
 }
 
