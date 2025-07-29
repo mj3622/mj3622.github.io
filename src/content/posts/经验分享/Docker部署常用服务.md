@@ -317,3 +317,32 @@ docker run -d \
 
 - 查看容器状态：`docker ps | grep rabbitmq`
 - 访问管理界面：http://localhost:15672 或 http://服务器IP:15672。使用设置的账号密码登录（admin/your_secure_password）
+
+## 3.5 Nacos
+### 1. 拉取镜像
+
+```bash
+docker pull nacos/nacos-server:2.4.1
+```
+### 2. 创建并运行容器
+
+```bash
+docker run -d \
+  --name nacos-standalone \
+  -e MODE=standalone \
+  -e NACOS_SERVER_IP=192.168.31.87 \
+  -e NACOS_AUTH_USER_NAME=admin \
+  -e NACOS_AUTH_USER_PASSWORD=myStrongPass123 \
+  -p 192.168.31.87:8848:8848 \
+  nacos/nacos-server:v2.4.1
+```
+- `-e MODE=standalone`：设置 Nacos 运行模式为单机模式
+- `-e NACOS_SERVER_IP=192.168.31.87`：设置 Nacos 服务器 IP 地址
+- `-e NACOS_AUTH_USER_NAME=admin`：设置 Nacos 默认用户名
+- `-e NACOS_AUTH_USER_PASSWORD=myStrongPass123`：设置 Nacos 默认用户密码
+
+### 3. 验证部署
+- 查看容器状态：`docker ps | grep nacos-standalone`
+- 访问 Nacos 控制台：http://192.168.31.87:8848/nacos
+- 使用设置的账号密码登录（admin/myStrongPass123）
+
