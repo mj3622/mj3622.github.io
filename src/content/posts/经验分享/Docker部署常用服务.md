@@ -322,27 +322,26 @@ docker run -d \
 ### 1. 拉取镜像
 
 ```bash
-docker pull nacos/nacos-server:2.4.1
+docker pull nacos/nacos-server:latest
 ```
 ### 2. 创建并运行容器
 
 ```bash
-docker run -d \
-  --name nacos-standalone \
-  -e MODE=standalone \
-  -e NACOS_SERVER_IP=192.168.31.87 \
-  -e NACOS_AUTH_USER_NAME=admin \
-  -e NACOS_AUTH_USER_PASSWORD=myStrongPass123 \
-  -p 192.168.31.87:8848:8848 \
-  nacos/nacos-server:v2.4.1
+docker run --name nacos-standalone-derby \
+    -e MODE=standalone \
+    -e NACOS_AUTH_TOKEN=${your_nacos_auth_secret_token} \
+    -e NACOS_AUTH_IDENTITY_KEY=${your_nacos_server_identity_key} \
+    -e NACOS_AUTH_IDENTITY_VALUE=${your_nacos_server_identity_value} \
+    -p 8848:8848 \
+    -d nacos/nacos-server:latest
 ```
 - `-e MODE=standalone`：设置 Nacos 运行模式为单机模式
-- `-e NACOS_SERVER_IP=192.168.31.87`：设置 Nacos 服务器 IP 地址
-- `-e NACOS_AUTH_USER_NAME=admin`：设置 Nacos 默认用户名
-- `-e NACOS_AUTH_USER_PASSWORD=myStrongPass123`：设置 Nacos 默认用户密码
+- `-e NACOS_AUTH_TOKEN=${your_nacos_auth_secret_token}`：Nacos 用于生成JWT Token的密钥，使用长度大于32字符的字符串，再经过Base64编码。
+- `-e NACOS_AUTH_IDENTITY_KEY=${your_nacos_server_identity_key}`：Nacos Server端之间 Inner API的身份标识的Key
+- `-e NACOS_AUTH_IDENTITY_VALUE=${your_nacos_server_identity_value}`：Nacos Server端之间 Inner API的身份标识的Value
+- `-p 8848:8848`：映射容器内 Nacos 控制台端口
 
 ### 3. 验证部署
 - 查看容器状态：`docker ps | grep nacos-standalone`
-- 访问 Nacos 控制台：http://192.168.31.87:8848/nacos
-- 使用设置的账号密码登录（admin/myStrongPass123）
+- 访问 Nacos 控制台：http://localhost:8848/nacos
 
