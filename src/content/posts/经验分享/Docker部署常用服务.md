@@ -345,3 +345,30 @@ docker run --name nacos-standalone-derby \
 - 查看容器状态：`docker ps | grep nacos-standalone`
 - 访问 Nacos 控制台：http://localhost:8848/nacos
 
+
+
+## 3.6 Minio
+
+### 1. 拉取镜像
+
+```bash
+docker pull minio/minio:RELEASE.2025-04-22T22-12-26Z
+```
+
+### 2. 创建容器并运行
+
+```bash
+docker run -d \
+  --name minio \
+  -p 9000:9000 \
+  -p 9001:9001 \
+  -e "MINIO_ROOT_USER=admin" \
+  -e "MINIO_ROOT_PASSWORD=adminpassword" \
+  -v /home/user/minio/data:/data \
+  minio/minio:RELEASE.2025-04-22T22-12-26Z \
+  server /data --console-address ":9001"
+```
+
+### 3. 验证部署
+
+- 访问 Nacos 控制台：http://localhost:9001
