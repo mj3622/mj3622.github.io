@@ -441,6 +441,7 @@ DELETE /namelist/_doc/1
         GetResponse response = client.get(request, RequestOptions.DEFAULT);
         if (response.isExists()) {
             System.out.println(response.getSourceAsString());
+            HotelDoc res = JSON.parseObject(response.getSourceAsString(), HotelDoc.class))
         }else {
             System.out.println("数据不存在");
         }
@@ -743,7 +744,7 @@ GET /hotel/_search
 
 
 
-## 7 RestClient查询
+## 7 RestClient高级查询
 
 **查询所有：**
 
@@ -1032,11 +1033,16 @@ POST /test/_search
 
 ## 10 数据同步
 
-es中的数据是来自于mysql，因此当mysql中的数据发生变化，es中的数据也必须跟着变化
+Elasticsearch中的数据是来自于MySQL ，因此当MySQL 中的数据发生变化，Elasticsearch中的数据也必须跟着变化
 
 **利用MQ实现：**
 
-通过MQ，当我们对数据库中的数据进行操作时，利用MQ向es的服务发送异步消息，使得数据能够同步
+通过MQ，当我们对数据库中的数据进行操作时，利用MQ向Elasticsearch的服务发送异步消息，使得数据能够同步
 
 ![](./assets/p_009.png)
 
+**利用Canal实现：**
+
+Elasticsearch借助 Canal 同步 MySQL 数据，主要通过 Canal 解析 MySQL 的 binlog 日志，然后将增量数据传输到 ES 中
+
+![image-20250815204430890](./assets/image-20250815204430890.png)
