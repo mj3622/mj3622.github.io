@@ -3,7 +3,7 @@ title: Redis基础篇
 published: 2024-12-12
 description: 本文为Redis基础内容相关的学习笔记，包括入门介绍、常用命令和在Java中的使用等内容
 image: ./assets/cover.png
-tags: [Redis]
+tags: [Redis, 缓存, 数据库]
 category: 学习笔记
 draft: false
 ---

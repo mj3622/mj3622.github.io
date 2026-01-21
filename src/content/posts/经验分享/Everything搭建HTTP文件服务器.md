@@ -2,7 +2,7 @@
 title: Everything搭建HTTP文件服务器
 published: 2025-02-27
 description: 为了解决在局域网环境中的跨设备访问文件的不便，本文将介绍如何利用Everything搭建局域网文件服务器，做到无需数据迁移即可实现终端设备的实时文件检索与访问
-tags: [局域网, 服务器]
+tags: [Everything, 局域网, 文件服务器]
 category: 经验分享
 draft: false
 ---

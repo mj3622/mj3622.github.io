@@ -2,7 +2,7 @@
 title: ElasticSearch快速上手
 published: 2025-08-13
 description: Elasticsearch (ES) 是一个开源的分布式、RESTful 风格的搜索和数据分析引擎。它能让你近乎实时地存储、搜索和分析海量数据，广泛应用于日志分析、全文检索、监控等场景。
-tags: [Spring, 中间件]
+tags: [ElasticSearch, 搜索引擎, 中间件]
 category: 学习笔记
 draft: false
 ---

@@ -3,7 +3,7 @@ title: 利用RSS实现自动追番
 published: 2024-07-01
 description: 本文将介绍如何利用RSS技术实现自动追番，让你轻松追番
 image: ./assets/rss.png
-tags: [RSS]
+tags: [RSS, 自动化, 工具]
 category: 经验分享
 draft: false
 ---

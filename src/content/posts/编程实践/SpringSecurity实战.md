@@ -2,7 +2,7 @@
 title: Spring Security结合JWT实现用户登录与动态权限
 published: 2025-07-21
 description: 由于Spring Security可配置内容较为复杂，初学者直接上手使用可能会感觉无从下手。本文将直接从快速应用的角度出发，介绍如何使用Spring Security结合JWT实现用户登录与基于URL的动态权限管理，快速搭建一个可用的登录授权系统。
-tags: [Spring, Token]
+tags: [Spring, 安全认证, JWT]
 category: 编程实践
 draft: false
 ---

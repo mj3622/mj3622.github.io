@@ -2,7 +2,7 @@
 title: 获取Github的token
 published: 2024-07-10
 description: 本文将详细介绍如何获取GitHub的token，以便你能够利用GitHub API进行各种操作
-tags: [git, Token]
+tags: [GitHub, API, 工具]
 category: 经验分享
 draft: false
 ---

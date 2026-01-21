@@ -3,7 +3,7 @@ title: Redis原理篇
 published: 2024-12-25
 description: 本文为Redis原理相关内容，从源码出发，了解其数据结构、网络模型、通信协议和内存策略
 image: ./assets/cover.png
-tags: [Redis]
+tags: [Redis, 源码分析, 数据结构]
 category: 学习笔记
 draft: false
 ---

@@ -2,7 +2,7 @@
 title: uni-app快速上手
 published: 2024-12-29
 description: 在本文将记录如何从0开始，学会使用uni-app的基本用法，并最终结合项目需求完成一些简单任务。
-tags: [uni-app]
+tags: [uni-app, 前端开发, Vue]
 category: 学习笔记
 draft: false
 ---

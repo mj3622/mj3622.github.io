@@ -2,7 +2,7 @@
 title: Typora自定义图片上传
 published: 2024-07-11
 description: 本文将介绍如何配置Typora以使用自定义服务进行图片上传
-tags: [云服务]
+tags: [Typora, 图床, 工具]
 category: 经验分享
 draft: false
 ---

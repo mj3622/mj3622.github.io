@@ -3,7 +3,7 @@ title: Redis高级篇
 published: 2024-12-19
 description: 本文为Redis进阶相关的学习笔记，包括持久化、主从、哨兵、分片和多级缓存等内容
 image: ./assets/cover.png
-tags: [Redis]
+tags: [Redis, 分布式, 高可用]
 category: 学习笔记
 draft: false
 ---

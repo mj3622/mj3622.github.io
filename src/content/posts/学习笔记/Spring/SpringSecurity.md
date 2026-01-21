@@ -3,7 +3,7 @@ title: Spring Security快速上手
 published: 2025-05-20
 description: 由于Spring Security可配置内容较为复杂，初学者直接上手使用可能会感觉无从下手。本文将直接从快速应用的角度出发，介绍如何使用Spring Security的基本功能
 image: ./assets/cover.png
-tags: [Spring]
+tags: [Spring, 安全认证]
 category: 学习笔记
 draft: true
 ---

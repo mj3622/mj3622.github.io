@@ -2,7 +2,7 @@
 title: Docker部署常用服务
 published: 2025-03-10
 description: Docker 通过容器化技术简化了应用的开发、测试和部署流程，提高了效率和一致性。本文将介绍如何利用docker快速部署一些常见的服务。
-tags: [docker]
+tags: [Docker, 容器化, 部署]
 category: 经验分享
 draft: false
 ---
