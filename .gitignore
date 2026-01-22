@@ -27,3 +27,4 @@ bun.lockb
 yarn.lock
 
 auto-commit.bat
+auto-commit.sh
