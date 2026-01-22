@@ -1,6 +1,6 @@
 ---
 title: Regex 入门指南：如何在 Java 中优雅地处理字符串
-published: 2024-06-25
+published: 2025-08-25
 description: 本文介绍了正则表达式（Regex）的基本概念和语法，重点讲解了如何在 Java 中使用 Regex 进行字符串匹配、提取和替换操作。
 tags: [编程实战, Java, 正则表达式]
 category: 编程实战
