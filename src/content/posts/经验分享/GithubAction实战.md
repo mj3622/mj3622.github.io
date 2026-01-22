@@ -2,7 +2,7 @@
 published: 2026-01-22
 title: GitHub Actions 实战：从零搭建 CI/CD 流水线
 description: 本文详细介绍了如何使用 GitHub Actions 实现代码自动部署到 Linux 服务器的 CI/CD 流水线，涵盖 SSH 密钥配置、Workflow 编写及前后端项目的实战案例。
-tags: [DevOps, GitHub Actions, CI/CD]
+tags: [DevOps, GitHub Actions, CI-CD]
 category: 经验分享
 draft: false
 ---
