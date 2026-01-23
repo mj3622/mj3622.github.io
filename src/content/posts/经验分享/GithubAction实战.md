@@ -7,8 +7,6 @@ category: 经验分享
 draft: false
 ---
 
-# GitHub Actions 实战：从零搭建 CI/CD 流水线
-
 在现代开发流程中，CI/CD（持续集成/持续部署）已经成为提高效率的关键环节。本文将介绍如何利用 GitHub Actions，在代码推送到 GitHub 仓库时，自动将其部署到你的 Linux 服务器上。
 
 我们将使用目前社区最流行的 `appleboy/ssh-action` 方案，因为它配置简单且足够安全。
