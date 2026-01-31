@@ -44,6 +44,7 @@
     "rehype-slug": "^6.0.0",
     "remark-directive": "^3.0.0",
     "remark-directive-rehype": "^0.4.2",
+    "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "sanitize-html": "^2.13.0",
     "sharp": "^0.33.5",

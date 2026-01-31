@@ -1,6 +1,7 @@
 ---
 import '@fontsource-variable/jetbrains-mono'
 import '@fontsource-variable/jetbrains-mono/wght-italic.css'
+import 'katex/dist/katex.min.css'
 
 interface Props {
   class: string
@@ -150,18 +151,67 @@ const className = Astro.props.class
       border-radius: 0.75rem
       padding-left: 1.25rem
       padding-right: 1.25rem
+      border: 1px solid unquote('color-mix(in srgb, var(--line-divider) 70%, transparent)')
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08)
 
       code
-        color: unset
+        color: var(--tw-prose-body)
         font-size: 0.875rem
         padding: 0
         background: none
+        text-shadow: 0 0 0.01px currentColor
 
         ::selection
           background: var(--codeblock-selection)
 
         span.br::selection
           background: var(--codeblock-selection)
+
+    table
+      display: block
+      width: 100%
+      overflow-x: auto
+      border-collapse: collapse
+      border-spacing: 0
+      margin: 1rem 0
+      border-radius: 0.75rem
+      box-shadow: 0 0 0 1px var(--line-divider)
+      background: var(--card-bg)
+
+    th, td
+      border: 1px solid var(--line-divider)
+      padding: 0.6rem 0.9rem
+      vertical-align: top
+      white-space: nowrap
+      overflow-wrap: normal
+      word-break: normal
+
+    th
+      background: unquote('color-mix(in srgb, var(--card-bg) 85%, var(--page-bg))')
+      font-weight: 600
+      letter-spacing: 0.01em
+
+    tr:nth-child(even)
+      background: unquote('color-mix(in srgb, var(--card-bg) 92%, var(--page-bg))')
+
+    tr:hover
+      background: unquote('color-mix(in srgb, var(--card-bg) 80%, var(--link-hover))')
+
+    .katex-display
+      overflow-x: auto
+      overflow-y: hidden
+      margin: 1rem 0
+      max-width: 100%
+      -webkit-overflow-scrolling: touch
+
+      > .katex
+        display: block
+        text-align: center
+
+    .katex
+      font-size: 1em
+      color: inherit
+      white-space: nowrap
 
     ul
       li
