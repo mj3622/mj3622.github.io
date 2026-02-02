@@ -1,8 +1,9 @@
 ---
-title: "深入理解 Java Supplier 接口：函数式编程的懒加载利器"
+title: 深入理解 Java Supplier 接口：函数式编程的懒加载利器
 date: 2025-12-15
-description: "本文深入探讨 Java 中的 Supplier 接口，解析其定义、用法及在函数式编程中的重要作用，特别是懒加载（Lazy Evaluation）的实现。"
+description: 本文深入探讨 Java 中的 Supplier 接口，解析其定义、用法及在函数式编程中的重要作用，特别是懒加载（Lazy Evaluation）的实现。
 tags: ["Java", "Supplier"]
+category: 编程实践
 draft: false
 ---
 
