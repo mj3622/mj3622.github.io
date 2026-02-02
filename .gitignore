@@ -28,3 +28,6 @@ yarn.lock
 
 auto-commit.bat
 auto-commit.sh
+
+# vscode settings
+.vscode/
