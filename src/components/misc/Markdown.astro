@@ -155,7 +155,7 @@ const className = Astro.props.class
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08)
 
       code
-        color: var(--tw-prose-body)
+        color: #f0ebe0
         font-size: 0.875rem
         padding: 0
         background: none
@@ -166,6 +166,12 @@ const className = Astro.props.class
 
         span.br::selection
           background: var(--codeblock-selection)
+
+    pre[data-language="text"],
+    pre.language-text
+      code
+        span
+          color: #f0ebe0 !important
 
     table
       display: block
