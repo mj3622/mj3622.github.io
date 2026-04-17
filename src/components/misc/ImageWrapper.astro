@@ -1,5 +1,5 @@
 ---
-import path from 'path'
+import path from 'node:path'
 interface Props {
   id?: string
   src: string
@@ -22,21 +22,22 @@ const isLocal = !(
 )
 const isPublic = src.startsWith('/')
 
-// TODO temporary workaround for images dynamic import
-// https://github.com/withastro/astro/issues/3373
-let img
+let img: ImageMetadata | undefined
 if (isLocal) {
   const files = import.meta.glob<ImageMetadata>('../../**', {
     import: 'default',
   })
-  let normalizedPath = path
+  const normalizedPath = path
     .normalize(path.join('../../', basePath, src))
     .replace(/\\/g, '/')
   const file = files[normalizedPath]
-  if (!file) {
-    console.error(`\n[ERROR] Image file not found: ${normalizedPath.replace('../../', 'src/')}`)
+  if (file) {
+    img = await file()
+  } else {
+    console.error(
+      `\n[ERROR] Image file not found: ${normalizedPath.replace('../../', 'src/')}`,
+    )
   }
-  img = await file()
 }
 
 const imageClass = 'w-full h-full object-cover'
@@ -47,4 +48,3 @@ const imageStyle = `object-position: ${position}`
     {isLocal && img && <Image src={img} alt={alt || ""} class={imageClass} style={imageStyle}/>}
     {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle}/>}
 </div>
-
