@@ -126,12 +126,12 @@ const shouldShowLeftToc = isPostPage && siteConfig.toc.enable && headings.length
 
 ## Success Criteria
 
-- [ ] 文章详情页大纲出现在左侧原信息栏位置。
-- [ ] 文章详情页右侧外扩 TOC 不再显示。
-- [ ] 非文章页面仍显示 Profile / Categories / Tags。
-- [ ] TOC 点击跳转正常。
-- [ ] `npm run build` 成功。
-- [ ] 在 127.0.0.1 本地服务中可手动预览效果。
+- [x] 文章详情页大纲出现在左侧原信息栏位置。
+- [x] 文章详情页右侧外扩 TOC 不再显示。
+- [x] 非文章页面仍显示 Profile / Categories / Tags。
+- [x] TOC 点击跳转正常。
+- [x] `npm run build` 成功。
+- [x] 在 127.0.0.1 本地服务中可手动预览效果。
 
 ## Open Questions
 
@@ -170,27 +170,27 @@ const shouldShowLeftToc = isPostPage && siteConfig.toc.enable && headings.length
 
 ## Implementation Tasks
 
-- [ ] Task: 扩展 `MainGridLayout.astro` 的布局 prop
+- [x] Task: 扩展 `MainGridLayout.astro` 的布局 prop
   - Acceptance: 支持默认侧边栏与文章 TOC 侧边栏两种模式，默认行为不变。
   - Verify: 非文章页面仍渲染 `SideBar`。
   - Files: `src/layouts/MainGridLayout.astro`
 
-- [ ] Task: 在左侧栏位置渲染文章 TOC
+- [x] Task: 在左侧栏位置渲染文章 TOC
   - Acceptance: `sidebarMode="toc"` 时左侧显示大纲，原 Profile / Categories / Tags 不显示。
   - Verify: 打开文章详情页查看左侧栏。
   - Files: `src/layouts/MainGridLayout.astro`
 
-- [ ] Task: 禁用文章详情页右侧外扩 TOC
+- [x] Task: 禁用文章详情页右侧外扩 TOC
   - Acceptance: `sidebarMode="toc"` 时右侧不再出现 `#toc-wrapper` 大纲。
   - Verify: 文章详情页 DOM 和视觉上均无右侧重复 TOC。
   - Files: `src/layouts/MainGridLayout.astro`
 
-- [ ] Task: 文章详情页传入 TOC 侧边栏模式
+- [x] Task: 文章详情页传入 TOC 侧边栏模式
   - Acceptance: 所有文章详情页使用左侧 TOC 布局。
   - Verify: `src/pages/posts/[...slug].astro` 构建通过，文章页大纲位置正确。
   - Files: `src/pages/posts/[...slug].astro`
 
-- [ ] Task: 构建与本地预览
+- [x] Task: 构建与本地预览
   - Acceptance: `npm run build` 成功，本地服务可访问。
   - Verify: 浏览器打开文章页与首页检查布局。
   - Files: 无或仅运行命令
