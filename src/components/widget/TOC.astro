@@ -45,6 +45,20 @@ const removeTailingHash = (text: string) => {
   return text.substring(0, lastIndexOfHash)
 }
 
+const explicitHeadingNumberPattern =
+  /^\s*(?:(?:第?\s*[0-9０-９]+(?:[.．、-][0-9０-９]+)*\s*(?:章|节|篇|部分)?[.．、:：\s]+)|(?:[（(]?\s*[0-9０-９]+\s*[）)]\s*)|(?:[一二三四五六七八九十百千万]+[、.．:：\s]+)|(?:第\s*[一二三四五六七八九十百千万]+\s*(?:章|节|篇|部分)[、.．:：\s]*))/
+
+const getDisplayText = (heading: MarkdownHeading) => {
+  const text = removeTailingHash(heading.text)
+
+  if (heading.depth !== minDepth) {
+    return text
+  }
+
+  const normalizedText = text.replace(explicitHeadingNumberPattern, '').trim()
+  return normalizedText || text
+}
+
 // biome-ignore lint/style/useConst: heading1Count is incremented in the template loop.
 let heading1Count = 1
 
@@ -70,7 +84,7 @@ const maxLevel = siteConfig.toc.depth
                 <div class:list={["text-sm", {
                     "text-50": heading.depth === minDepth || heading.depth === minDepth + 1,
                     "text-30": heading.depth === minDepth + 2,
-                }]}>{removeTailingHash(heading.text)}</div>
+                }]}>{getDisplayText(heading)}</div>
             </a>
     )}
 </div>
