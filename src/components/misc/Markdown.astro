@@ -173,29 +173,33 @@ const className = Astro.props.class
         span
           color: #f0ebe0 !important
 
-    table
+    .table-wrapper
       display: block
       width: 100%
       overflow-x: auto
-      border-collapse: collapse
-      border-spacing: 0
+      -webkit-overflow-scrolling: touch
       margin: 1rem 0
       border-radius: 0.75rem
       box-shadow: 0 0 0 1px var(--line-divider)
       background: var(--card-bg)
 
+    table
+      width: 100%
+      border-collapse: collapse
+      border-spacing: 0
+
     th, td
       border: 1px solid var(--line-divider)
       padding: 0.6rem 0.9rem
       vertical-align: top
-      white-space: nowrap
-      overflow-wrap: normal
-      word-break: normal
+      white-space: normal
+      overflow-wrap: break-word
 
     th
       background: unquote('color-mix(in srgb, var(--card-bg) 85%, var(--page-bg))')
       font-weight: 600
       letter-spacing: 0.01em
+      white-space: nowrap
 
     tr:nth-child(even)
       background: unquote('color-mix(in srgb, var(--card-bg) 92%, var(--page-bg))')
