@@ -15,6 +15,7 @@ import remarkGfm from 'remark-gfm'
 import remarkGithubAdmonitionsToDirectives from 'remark-github-admonitions-to-directives'
 import remarkMath from 'remark-math'
 import { AdmonitionComponent } from './src/plugins/rehype-component-admonition.mjs'
+import { rehypeWrapTables } from './src/plugins/rehype-wrap-tables.mjs'
 import { GithubCardComponent } from './src/plugins/rehype-component-github-card.mjs'
 import { parseDirectiveNode } from './src/plugins/remark-directive-rehype.js'
 import { remarkNormalizeCodeLang } from './src/plugins/remark-normalize-code-lang.mjs'
@@ -84,6 +85,7 @@ export default defineConfig({
     rehypePlugins: [
       rehypeKatex,
       rehypeSlug,
+      rehypeWrapTables(),
       [
         rehypeComponents,
         {
