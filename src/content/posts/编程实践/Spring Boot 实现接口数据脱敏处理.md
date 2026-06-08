@@ -7,9 +7,7 @@ category: 编程实践
 draft: false
 ---
 
-# Spring Boot 实现接口数据脱敏处理
-
-## 1. 背景
+# 1. 背景
 
 在接口开发中，用户手机号、身份证号、银行卡号、邮箱等字段通常不能直接明文返回。
 
@@ -21,7 +19,7 @@ user.setPhone(maskPhone(user.getPhone()));
 
 这种写法能跑，但不够统一，也容易漏处理。更适合的方式是：**用注解声明字段需要脱敏，让 Jackson 在 JSON 序列化阶段统一处理。**
 
-## 2. 实现目标
+# 2. 实现目标
 
 希望业务对象只需要这样标记字段：
 
@@ -35,7 +33,7 @@ private String phone;
 - 当前用户没有权限：返回 `138****5678`
 - 当前用户拥有 `user:phone:read` 权限：返回 `13812345678`
 
-## 3. 核心设计
+# 3. 核心设计
 
 整体实现由四部分组成：
 
@@ -46,7 +44,7 @@ private String phone;
 
 ![image-20260608190735607](./assets/image-20260608190735607.png)
 
-## 4. 定义脱敏注解
+# 4. 定义脱敏注解
 
 `@Sensitive` 是这个方案的入口。字段加上该注解后，Jackson 会使用自定义序列化器处理它。
 
@@ -71,7 +69,7 @@ public @interface Sensitive {
 
 这里的关键是 `@JsonSerialize`，它把字段序列化逻辑交给了 `PermissionSensitiveJsonSerializer`。
 
-## 5. 定义脱敏规则
+# 5. 定义脱敏规则
 
 脱敏规则集中放在 `SensitiveMasker` 中。以手机号为例：
 
@@ -98,7 +96,7 @@ private static String maskPhone(String value) {
 
 其他类型也可以在同一个工具类中继续扩展，避免脱敏逻辑散落在 Controller 或 Service 中。
 
-## 6. 保存当前用户权限
+# 6. 保存当前用户权限
 
 本文使用 `ThreadLocal` 保存当前用户权限：
 
@@ -116,7 +114,7 @@ public static Set<String> getPermissions() {
 
 真实项目中，权限上下文通常可以从 Spring Security、网关鉴权结果、拦截器或过滤器中设置。
 
-## 7. 自定义 Jackson 序列化器
+# 7. 自定义 Jackson 序列化器
 
 脱敏逻辑真正生效的位置在 `PermissionSensitiveJsonSerializer`。
 
@@ -142,7 +140,7 @@ public class PermissionSensitiveJsonSerializer extends JsonSerializer<String>
 
 也就是说，`JsonSerializer` 处理值，`ContextualSerializer` 处理字段配置。
 
-### 7.1 成员变量说明
+## 7.1 成员变量说明
 
 `PermissionSensitiveJsonSerializer` 中有两个核心成员变量：
 
@@ -173,7 +171,7 @@ private String email;
 
 序列化 `phone` 时，`sensitiveType` 是 `PHONE`；序列化 `email` 时，`sensitiveType` 是 `EMAIL`。这也是为什么需要为不同字段创建带有不同配置的序列化器实例。
 
-### 7.2 继承 JsonSerializer
+## 7.2 继承 JsonSerializer
 
 `JsonSerializer<String>` 中最重要的方法是 `serialize`：
 
@@ -207,7 +205,7 @@ public void serialize(String value, JsonGenerator generator, SerializerProvider 
 - 有权限：调用 `generator.writeString(value)` 输出明文。
 - 无权限：先调用 `SensitiveMasker.mask(...)` 脱敏，再写入 JSON。
 
-### 7.3 实现 ContextualSerializer
+## 7.3 实现 ContextualSerializer
 
 如果只继承 `JsonSerializer<String>`，序列化器只能拿到字段值，无法知道字段上配置的是手机号脱敏、邮箱脱敏，还是银行卡脱敏。
 
@@ -252,7 +250,7 @@ public JsonSerializer<?> createContextual(SerializerProvider provider, BeanPrope
 
 读取到 `@Sensitive` 后，会创建一个新的 `PermissionSensitiveJsonSerializer`，并把当前字段的脱敏类型和权限配置保存进去。这样后续执行 `serialize` 时，就知道应该按什么规则处理当前字段。
 
-### 7.4 权限判断
+## 7.4 权限判断
 
 序列化器负责做两件事：
 
@@ -283,7 +281,7 @@ generator.writeString(SensitiveMasker.mask(value, sensitiveType));
 
 也就是说，权限命中时输出原始值，否则调用脱敏工具类输出脱敏结果。
 
-### 7.5 是否会重复创建序列化器
+## 7.5 是否会重复创建序列化器
 
 看到 `createContextual` 里有一行 `new PermissionSensitiveJsonSerializer(...)`，很容易产生一个疑问：**每次序列化对象时，都会重新创建序列化器吗？**
 
@@ -318,7 +316,7 @@ class UserDTO {
 
 ![image-20260608190449974](./assets/image-20260608190449974.png)
 
-## 8. 测试验证
+# 8. 测试验证
 
 本文使用 `ObjectMapper` 直接验证序列化结果，重点覆盖两类核心情况：
 
@@ -343,7 +341,7 @@ void printMaskingResultForBlog() throws JsonProcessingException {
 
 ![image-20260608190113909](./assets/image-20260608190113909.png)
 
-## 9. 小结
+# 9. 小结
 
 本文实现的数据脱敏方案，本质上是把“字段是否敏感”和“字段如何输出”这两件事拆开处理。
 
