@@ -48,9 +48,12 @@ export async function getTagList(): Promise<Tag[]> {
     })
   })
 
-  // sort tags
+  // sort tags by usage count, then alphabetically for a stable order
   const keys: string[] = Object.keys(countMap).sort((a, b) => {
-    return a.toLowerCase().localeCompare(b.toLowerCase())
+    return (
+      countMap[b] - countMap[a] ||
+      a.toLowerCase().localeCompare(b.toLowerCase())
+    )
   })
 
   return keys.map(key => ({ name: key, count: countMap[key] }))
