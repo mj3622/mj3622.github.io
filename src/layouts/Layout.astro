@@ -3,18 +3,17 @@ import GlobalStyles from '@components/GlobalStyles.astro'
 import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
-import ImageWrapper from '@components/misc/ImageWrapper.astro'
 
 import { profileConfig, siteConfig } from '@/config'
 import ConfigCarrier from '@components/ConfigCarrier.astro'
 import {
   AUTO_MODE,
-  DARK_MODE,
-  DEFAULT_THEME,
-  LIGHT_MODE,
   BANNER_HEIGHT,
   BANNER_HEIGHT_EXTEND,
   BANNER_HEIGHT_HOME,
+  DARK_MODE,
+  DEFAULT_THEME,
+  LIGHT_MODE,
   PAGE_WIDTH,
 } from '../constants/constants'
 import { defaultFavicons } from '../constants/icon'
@@ -42,9 +41,6 @@ const configHue = siteConfig.themeColor.hue
 if (!banner || typeof banner !== 'string' || banner.trim() === '') {
   banner = siteConfig.banner.src
 }
-
-// TODO don't use post cover as banner for now
-banner = siteConfig.banner.src
 
 const enableBanner = siteConfig.banner.enable
 
@@ -237,37 +233,6 @@ import {
 // 	}
 // })();
 
-/* TODO This is a temporary solution for style flicker issue when the transition is activated */
-/* issue link: https://github.com/withastro/astro/issues/8711, the solution get from here too */
-/* update: fixed in Astro 3.2.4 */
-/*
-function disableAnimation() {
-	const css = document.createElement('style')
-	css.appendChild(
-		document.createTextNode(
-			`*{
-              -webkit-transition:none!important;
-              -moz-transition:none!important;
-              -o-transition:none!important;
-              -ms-transition:none!important;
-              transition:none!important
-              }`
-		)
-	)
-	document.head.appendChild(css)
-
-	return () => {
-		// Force restyle
-		;(() => window.getComputedStyle(document.body))()
-
-		// Wait for next tick before removing
-		setTimeout(() => {
-			document.head.removeChild(css)
-		}, 1)
-	}
-}
-*/
-
 const bannerEnabled = !!document.getElementById('banner-wrapper')
 
 function setClickOutsideToClose(panel: string, ignores: string[]) {
@@ -339,7 +304,6 @@ function showBanner() {
 }
 
 function init() {
-	// disableAnimation()()		// TODO
 	loadTheme();
 	loadHue();
 	initCustomScrollbar();
@@ -354,18 +318,6 @@ init();
 document.addEventListener('astro:after-swap', init);
 
 const setup = () => {
-	// TODO: temp solution to change the height of the banner
-/*
-	window.swup.hooks.on('animation:out:start', () => {
-		const path = window.location.pathname
-		const body = document.querySelector('body')
-		if (path[path.length - 1] === '/' && !body.classList.contains('is-home')) {
-			body.classList.add('is-home')
-		} else if (path[path.length - 1] !== '/' && body.classList.contains('is-home')) {
-			body.classList.remove('is-home')
-		}
-	})
-*/
 	window.swup.hooks.on('link:click', () => {
 		// Remove the delay for the first time page load
 		document.documentElement.style.setProperty('--content-delay', '0ms')

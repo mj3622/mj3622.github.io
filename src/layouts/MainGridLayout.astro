@@ -3,29 +3,51 @@ import Footer from '@components/Footer.astro'
 import Navbar from '@components/Navbar.astro'
 import BackToTop from '@components/control/BackToTop.astro'
 import SideBar from '@components/widget/SideBar.astro'
-import Layout from './Layout.astro'
-import { Icon } from 'astro-icon/components'
-import { siteConfig } from '../config'
 import type { MarkdownHeading } from 'astro'
-import TOC from "../components/widget/TOC.astro";
-import ImageWrapper from "../components/misc/ImageWrapper.astro";
-import {BANNER_HEIGHT, BANNER_HEIGHT_EXTEND, MAIN_PANEL_OVERLAPS_BANNER_HEIGHT} from "../constants/constants";
+import { Icon } from 'astro-icon/components'
+import ImageWrapper from '../components/misc/ImageWrapper.astro'
+import TOC from '../components/widget/TOC.astro'
+import { siteConfig } from '../config'
+import {
+  BANNER_HEIGHT,
+  BANNER_HEIGHT_EXTEND,
+  MAIN_PANEL_OVERLAPS_BANNER_HEIGHT,
+} from '../constants/constants'
+import Layout from './Layout.astro'
 
 interface Props {
   title?: string
   banner?: string
+  bannerBasePath?: string
   description?: string
   lang?: string
-  setOGTypeArticle?: boolean;
-  headings? : MarkdownHeading[]
+  setOGTypeArticle?: boolean
+  headings?: MarkdownHeading[]
+  sidebarMode?: 'default' | 'toc'
 }
 
-const { title, banner, description, lang, setOGTypeArticle, headings = [] } = Astro.props
+const {
+  title,
+  banner,
+  bannerBasePath,
+  description,
+  lang,
+  setOGTypeArticle,
+  headings = [],
+  sidebarMode = 'default',
+} = Astro.props
 const hasBannerCredit =
   siteConfig.banner.enable && siteConfig.banner.credit.enable
 const hasBannerLink = !!siteConfig.banner.credit.url
+const hasCustomBanner = !!(banner && banner.trim() !== '')
+const resolvedBanner = hasCustomBanner ? banner : siteConfig.banner.src
+const resolvedBannerBasePath = hasCustomBanner ? bannerBasePath : '/'
 
-const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)` : "5.5rem"
+const mainPanelTop = siteConfig.banner.enable
+  ? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)`
+  : '5.5rem'
+const shouldUseSidebarToc = sidebarMode === 'toc'
+const shouldShowRightToc = siteConfig.toc.enable && !shouldUseSidebarToc
 ---
 
 <Layout title={title} banner={banner} description={description} lang={lang} setOGTypeArticle={setOGTypeArticle}>
@@ -41,7 +63,9 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
 <!-- Banner -->
 {siteConfig.banner.enable && <div id="banner-wrapper" class=`absolute z-10 w-full transition duration-700 overflow-hidden` style=`top: -${BANNER_HEIGHT_EXTEND}vh`>
     <ImageWrapper id="banner" alt="Banner image of the blog" class:list={["object-cover h-full transition duration-700 opacity-0 scale-105"]}
-                  src={siteConfig.banner.src} position={siteConfig.banner.position}
+                  src={resolvedBanner}
+                  position={siteConfig.banner.position}
+                  basePath={resolvedBannerBasePath}
     >
     </ImageWrapper>
 </div>}
@@ -67,7 +91,26 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
             </a>}
 
 
-            <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" headings={headings}></SideBar>
+            {shouldUseSidebarToc ? (
+                <aside id="sidebar" class="hidden lg:block mb-4 row-start-1 row-end-2 col-span-1 lg:max-w-[17.5rem] onload-animation w-full">
+                    <div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 sticky top-4">
+                        <div class="card-base pb-4">
+                            <div class="font-bold transition text-lg text-neutral-900 dark:text-neutral-100 relative ml-8 mt-4 mb-2
+                                before:w-1 before:h-4 before:rounded-md before:bg-[var(--primary)]
+                                before:absolute before:left-[-16px] before:top-[5.5px]">目录</div>
+                            <div id="toc-inner-wrapper" class="max-h-[calc(100vh_-_8rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar px-2">
+                                <div id="toc" class="w-full transition-swup-fade">
+                                    <div class="h-2 w-full"></div>
+                                    {siteConfig.toc.enable && <TOC headings={headings}></TOC>}
+                                    <div class="h-2 w-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            ) : (
+                <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" headings={headings}></SideBar>
+            )}
 
             <main id="swup-container" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
                 <div id="content-wrapper" class="onload-animation">
@@ -93,7 +136,7 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
 <div class="absolute w-full z-0">
     <div class="relative max-w-[var(--page-width)] mx-auto">
         <!-- TOC component -->
-        {siteConfig.toc.enable && <div id="toc-wrapper" class:list={["hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] flex items-center",
+        {shouldShowRightToc && <div id="toc-wrapper" class:list={["hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] flex items-center",
             {"toc-hide": siteConfig.banner.enable}]}
         >
             <div id="toc-inner-wrapper" class="fixed top-14 w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar">
@@ -106,7 +149,7 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
         </div>}
 
         <!-- #toc needs to exist for Swup to work normally -->
-        {!siteConfig.toc.enable && <div id="toc"></div>}
+        {!shouldShowRightToc && !shouldUseSidebarToc && <div id="toc"></div>}
     </div>
 </div>
 </Layout>

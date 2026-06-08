@@ -17,6 +17,7 @@ import remarkMath from 'remark-math'
 import { AdmonitionComponent } from './src/plugins/rehype-component-admonition.mjs'
 import { GithubCardComponent } from './src/plugins/rehype-component-github-card.mjs'
 import { parseDirectiveNode } from './src/plugins/remark-directive-rehype.js'
+import { remarkNormalizeCodeLang } from './src/plugins/remark-normalize-code-lang.mjs'
 import { remarkExcerpt } from './src/plugins/remark-excerpt.js'
 import { remarkReadingTime } from './src/plugins/remark-reading-time.mjs'
 
@@ -42,7 +43,7 @@ export default defineConfig({
       animationClass: 'transition-swup-',   // see https://swup.js.org/options/#animationselector
                                             // the default value `transition-` cause transition delay
                                             // when the Tailwind class `transition-all` is used
-      containers: ['main', '#toc'],
+      containers: ['main', '#sidebar'],
       smoothScrolling: true,
       cache: true,
       preload: true,
@@ -73,6 +74,7 @@ export default defineConfig({
     remarkPlugins: [
       remarkMath,
       remarkGfm,
+      remarkNormalizeCodeLang,
       remarkReadingTime,
       remarkExcerpt,
       remarkGithubAdmonitionsToDirectives,
