@@ -1,0 +1,54 @@
+@startuml
+title 同步等待、超时扫描与迟到响应
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Consumer 调用线程" as Caller
+participant "HeaderExchangeChannel" as Exchange
+participant "DefaultFuture" as Future
+participant "Netty Channel" as Network
+participant "Provider 业务线程" as Provider
+participant "超时扫描线程" as Scanner
+
+Caller -> Exchange: request(invocation, timeout)
+Exchange -> Future: new DefaultFuture(channel, request, timeout)
+Future -> Future: FUTURES.put(requestId, future)
+Exchange -> Network: send(request)
+Network -> Provider: Request
+Caller -> Future: get(timeout)
+Future -> Future: Condition.await(...)
+
+alt Provider 在超时前返回
+  Provider --> Network: Response(requestId)
+  Network -> Future: received(channel, response)
+  Future -> Future: remove(requestId)\nset response + signal()
+  Future --> Caller: RpcResult
+else Consumer 等待超时
+  Future --> Caller: get(timeout) 可先抛出 TimeoutException
+  Scanner -> Future: 扫描后构造 timeoutResponse
+  Future -> Future: received(timeoutResponse)\nremove + signal()
+  note over Caller,Scanner
+  get 与扫描线程存在先后竞态；
+  扫描线程还负责从全局 Map 回收 Future。
+  end note
+  note over Provider
+  Consumer 超时不会发送取消指令，
+  Provider 业务线程继续执行。
+  end note
+  Provider --> Network: 迟到的 Response(requestId)
+  Network -> Future: received(channel, response)
+  Future -> Future: 找不到 requestId，记录迟到响应日志
+end
+@enduml

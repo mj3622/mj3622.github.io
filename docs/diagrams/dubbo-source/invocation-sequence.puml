@@ -1,0 +1,85 @@
+@startuml
+title 一次完整的 Dubbo 远程调用
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Consumer\n业务代码" as Consumer
+participant InvokerInvocationHandler as ProxyHandler
+participant "MockClusterInvoker /\nFailoverClusterInvoker" as ClusterInvoker
+participant DubboInvoker
+participant "Consumer Remoting\nHeaderExchangeChannel\nDefaultFuture / Netty" as CRemoting
+participant "Provider Remoting\nNetty / HeaderExchangeHandler" as PRemoting
+participant "DubboProtocol\nrequestHandler" as ProtocolHandler
+participant "Provider Invoker" as ProviderInvoker
+participant "Javassist Wrapper" as Wrapper
+participant GreetingServiceImpl as Service
+
+group Consumer 生成并发送请求
+  Consumer -> ProxyHandler: invoke(proxy, method, args)
+  activate ProxyHandler
+  ProxyHandler -> ClusterInvoker: invoke(new RpcInvocation(method, args))
+  activate ClusterInvoker
+  ClusterInvoker -> ClusterInvoker: directory.list(invocation)\nRegistryDirectory.doList(invocation)
+  ClusterInvoker -> ClusterInvoker: router.route(invokers)
+  ClusterInvoker -> ClusterInvoker: loadbalance.select(invokers)
+  ClusterInvoker -> DubboInvoker: invoke(invocation)
+  activate DubboInvoker
+  DubboInvoker -> DubboInvoker: doInvoke(invocation)
+  DubboInvoker -> CRemoting: request(invocation, timeout)
+  activate CRemoting
+  CRemoting -> CRemoting: new Request\nnew DefaultFuture
+  CRemoting -> PRemoting: Netty 发送编码后的 Request
+end
+
+group Provider 执行业务方法
+  activate PRemoting
+  PRemoting -> PRemoting: HeaderExchangeHandler.received()
+  PRemoting -> PRemoting: handleRequest()
+  PRemoting -> ProtocolHandler: reply(channel, invocation)
+  activate ProtocolHandler
+  ProtocolHandler -> ProtocolHandler: getInvoker(channel, invocation)
+  ProtocolHandler -> ProviderInvoker: invoke(invocation)
+  activate ProviderInvoker
+  ProviderInvoker -> Wrapper: invokeMethod(proxy, methodName, types, args)
+  activate Wrapper
+  Wrapper -> Service: sayHello(name)
+  activate Service
+  Service --> Wrapper: String
+  deactivate Service
+  Wrapper --> ProviderInvoker: 返回值
+  deactivate Wrapper
+  ProviderInvoker --> ProtocolHandler: RpcResult
+  deactivate ProviderInvoker
+  ProtocolHandler --> PRemoting: RpcResult
+  deactivate ProtocolHandler
+end
+
+group 响应返回 Consumer
+  PRemoting -> PRemoting: new Response(requestId)
+  PRemoting -> CRemoting: Netty 返回编码后的 Response
+  deactivate PRemoting
+  CRemoting -> CRemoting: HeaderExchangeHandler.handleResponse()
+  CRemoting -> CRemoting: DefaultFuture.received(response)
+  CRemoting --> DubboInvoker: DefaultFuture.get() 返回 RpcResult
+  deactivate CRemoting
+  DubboInvoker --> ClusterInvoker: Result
+  deactivate DubboInvoker
+  ClusterInvoker --> ProxyHandler: Result
+  deactivate ClusterInvoker
+  ProxyHandler -> ProxyHandler: Result.recreate()
+  ProxyHandler --> Consumer: String
+  deactivate ProxyHandler
+end
+@enduml

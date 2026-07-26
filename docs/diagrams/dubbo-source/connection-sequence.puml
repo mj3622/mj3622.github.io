@@ -1,0 +1,62 @@
+@startuml
+title Consumer 连接建立、复用与重连
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "DubboProtocol" as Protocol
+participant "referenceClientMap" as ClientMap
+participant "ReferenceCountExchangeClient" as RefClient
+participant "Exchangers" as Exchangers
+participant "NettyClient / AbstractClient" as Client
+participant "Provider" as Provider
+participant "重连定时线程" as Reconnect
+
+Protocol -> Protocol: getClients(providerUrl)
+alt connections 未配置（默认共享）
+  Protocol -> ClientMap: get(providerAddress)
+  alt 已有未关闭连接
+    ClientMap --> Protocol: RefClient
+    Protocol -> RefClient: incrementAndGetCount()
+  else 首次建立
+    Protocol -> Exchangers: connect(url, handler)
+    Exchangers -> Client: new NettyClient(...)
+    Client -> Client: doOpen()
+    Client -> Reconnect: initConnectStatusCheckCommand()
+    Client -> Provider: doConnect()
+    Provider --> Client: TCP 连接成功
+    Protocol -> RefClient: new ReferenceCountExchangeClient(client)
+    Protocol -> ClientMap: put(address, RefClient)
+  end
+else connections 显式配置
+  Protocol -> Exchangers: 每个服务创建独立连接
+end
+
+note over RefClient,Client
+引用销毁只递减引用计数；
+计数归零才关闭共享物理连接。
+end note
+
+Provider --> Client: 连接断开
+loop 默认每 2 秒检查
+  Reconnect -> Client: isConnected()
+  Client -> Provider: connect() / doConnect()
+  alt Provider 尚未恢复
+    Provider --> Client: 连接失败，等待下一轮
+  else Provider 恢复
+    Provider --> Client: 新 Channel
+    Client -> Client: 替换旧 Channel
+  end
+end
+@enduml

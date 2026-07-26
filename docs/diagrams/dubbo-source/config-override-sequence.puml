@@ -1,0 +1,46 @@
+@startuml
+title 配置解析、聚合与动态覆盖
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Dubbo XML" as XML
+participant "DubboBeanDefinitionParser" as Parser
+participant "ReferenceConfig / ServiceConfig" as Config
+participant "AbstractConfig" as AbstractConfig
+participant "URL 参数 Map" as Params
+participant "RegistryDirectory" as Directory
+participant "Configurator" as Override
+participant "合并后的 URL" as URL
+participant "调用方" as Caller
+
+XML -> Parser: parse(element)
+Parser -> Config: 设置 Consumer / Provider /\nReference / Service / MethodConfig
+Config -> AbstractConfig: appendProperties(config)
+AbstractConfig -> Config: -D 系统属性覆盖 Bean 属性
+Config -> Params: appendParameters(application)
+Config -> Params: appendParameters(module)
+Config -> Params: appendParameters(consumer/provider default)
+Config -> Params: appendParameters(reference/service)
+Config -> Params: appendParameters(method, methodName)
+
+Directory -> Directory: mergeUrl(providerUrl)
+Directory -> Params: ClusterUtils.mergeUrl(provider, consumer)
+Directory -> Override: configure(mergedUrl)
+Override --> Directory: 动态覆盖后的 URL
+Directory -> URL: 保存最终参数
+Caller -> URL: getMethodParameter(method, key)
+URL -> URL: 先查 method.key，再查 key
+URL --> Caller: 最终配置值
+@enduml

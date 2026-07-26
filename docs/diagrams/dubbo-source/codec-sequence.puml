@@ -1,0 +1,45 @@
+@startuml
+title RpcInvocation 的编解码与序列化
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "RpcInvocation" as Invocation
+participant "ExchangeCodec" as ExchangeCodec
+participant "DubboCodec" as DubboCodec
+participant "Serialization" as Serialization
+participant "Netty Channel" as Network
+participant "DecodeableRpcInvocation" as DecodedInvocation
+participant "Provider" as Provider
+participant "DecodeableRpcResult" as DecodedResult
+
+Invocation -> ExchangeCodec: encodeRequest(request)
+ExchangeCodec -> Serialization: serialize(url, output)
+ExchangeCodec -> DubboCodec: encodeRequestData(...)
+DubboCodec -> Serialization: 写入版本、path、方法名、\n参数描述、参数值、attachments
+ExchangeCodec -> ExchangeCodec: 写 16 字节头\n魔数 / 标志 / requestId / 长度
+ExchangeCodec -> Network: header + body
+Network -> DubboCodec: decodeBody(header, input)
+DubboCodec -> DecodedInvocation: new DecodeableRpcInvocation(...)
+DecodedInvocation -> Serialization: deserialize(...)
+DecodedInvocation --> Provider: 恢复 Invocation
+
+Provider --> DubboCodec: RpcResult
+DubboCodec -> Serialization: 写结果标记、返回值或异常、attachments
+DubboCodec -> Network: Response 字节
+Network -> DubboCodec: decodeBody(...)
+DubboCodec -> DecodedResult: new DecodeableRpcResult(...)
+DecodedResult -> Serialization: 按结果标记反序列化
+DecodedResult --> Invocation: RpcResult
+@enduml

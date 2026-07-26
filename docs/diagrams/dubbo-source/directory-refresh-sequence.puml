@@ -1,0 +1,52 @@
+@startuml
+title Provider 上下线后的地址通知与 Invoker 刷新
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Provider" as Provider
+participant "ZookeeperRegistry" as Registry
+participant "RegistryDirectory" as Directory
+participant "Protocol" as Protocol
+participant "Invoker Map" as InvokerMap
+
+Provider -> Registry: 创建或删除 Provider 节点
+Registry -> Registry: ChildListener#childChanged(...)
+Registry -> Directory: notify(urls)
+Directory -> Directory: 按 providers / routers /\nconfigurators 分类
+Directory -> Directory: refreshInvoker(providerUrls)
+
+alt empty:// 表示无可用 Provider
+  Directory -> Directory: forbidden = true
+  Directory -> InvokerMap: destroyAllInvokers()
+else 存在 Provider 地址
+  Directory -> Directory: toInvokers(urls)
+  loop 每个合并后的 Provider URL
+    alt 完整 URL 已存在
+      Directory -> InvokerMap: 复用旧 Invoker
+    else 新增或参数变化
+      Directory -> Protocol: refer(serviceType, url)
+      Protocol --> Directory: 新 Invoker
+    end
+  end
+  Directory -> Directory: toMethodInvokers(newMap)
+  Directory -> InvokerMap: 替换 methodInvokerMap\n和 urlInvokerMap
+  Directory -> InvokerMap: destroyUnusedInvokers(old, new)
+end
+
+note over Directory,InvokerMap
+下一次 list(invocation) 直接读取新快照，
+业务代理本身不需要重建。
+end note
+@enduml

@@ -1,0 +1,47 @@
+@startuml
+title Provider 默认线程派发模型
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Consumer" as Consumer
+participant "Netty IO 线程" as IO
+participant "AllChannelHandler" as Dispatcher
+participant "Dubbo 业务线程池" as Pool
+participant "HeaderExchangeHandler" as Exchange
+participant "Provider Invoker" as Invoker
+
+Consumer -> IO: 发送请求字节
+IO -> IO: Codec 解出 Request
+IO -> Dispatcher: received(channel, request)
+Dispatcher -> Pool: execute(ChannelEventRunnable)
+
+alt 线程池接受任务
+  Pool -> Exchange: handler.received(...)
+  Exchange -> Exchange: handleRequest(request)
+  Exchange -> Invoker: reply / invoke
+  Invoker --> Exchange: RpcResult
+  Exchange --> IO: send(Response)
+  IO --> Consumer: 响应字节
+else 线程池拒绝双向请求
+  Dispatcher --> IO: SERVER_THREADPOOL_EXHAUSTED_ERROR
+  IO --> Consumer: 立即返回错误响应
+end
+
+note over IO,Pool
+默认 all dispatcher 把 received、connected、
+disconnected、caught 事件派发到业务线程池，
+避免业务执行长期占用 Netty IO 线程。
+end note
+@enduml

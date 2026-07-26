@@ -1,0 +1,61 @@
+@startuml
+title injvm、Mock、异步与单向调用分支
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Consumer 业务代码" as Consumer
+participant "ReferenceConfig / 代理" as Proxy
+participant "MockClusterInvoker" as Mock
+participant "InjvmInvoker" as Injvm
+participant "DubboInvoker" as Remote
+participant "ExchangeClient" as Client
+participant "Provider" as Provider
+
+group injvm 本地调用
+  Proxy -> Proxy: createProxy() 判断 isJvmRefer
+  Proxy -> Injvm: refer / invoke
+  Injvm -> Injvm: 从 exporterMap 找 Provider Invoker
+  Injvm --> Consumer: 同 JVM 直接返回，不经过网络
+end
+
+group Mock 降级
+  Consumer -> Mock: invoke(invocation)
+  alt force mock
+    Mock -> Mock: doMockInvoke()
+    Mock --> Consumer: 本地返回值 / 异常 / Mock 类
+  else fail mock
+    Mock -> Remote: 先调用远程服务
+    Remote --> Mock: 非业务 RpcException
+    Mock -> Mock: doMockInvoke()
+    Mock --> Consumer: 降级结果
+  end
+end
+
+group 异步调用
+  Consumer -> Remote: invoke(async=true)
+  Remote -> Client: request(invocation, timeout)
+  Client --> Remote: ResponseFuture
+  Remote -> Proxy: RpcContext.setFuture(FutureAdapter)
+  Proxy --> Consumer: 立即返回空 RpcResult
+  Provider --> Client: 稍后返回 Response
+end
+
+group 单向调用
+  Consumer -> Remote: invoke(return=false)
+  Remote -> Client: send(invocation, sent)
+  Client -> Provider: Request(twoWay=false)
+  Remote --> Consumer: 空 RpcResult，不创建 DefaultFuture
+end
+@enduml

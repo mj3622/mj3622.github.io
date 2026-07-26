@@ -1,0 +1,47 @@
+@startuml
+title ProtocolFilterWrapper 构建并执行 Filter 责任链
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "ProtocolFilterWrapper" as Wrapper
+participant "ExtensionLoader" as Loader
+participant "Consumer Filter 链" as ConsumerFilters
+participant "DubboInvoker" as Remote
+participant "Provider Filter 链" as ProviderFilters
+participant "业务 Invoker" as Business
+
+Wrapper -> Loader: getActivateExtension(url, key, group)
+Loader --> Wrapper: 按 @Activate 和配置排序的 Filters
+Wrapper -> Wrapper: 从后向前包装 Invoker
+
+ConsumerFilters -> ConsumerFilters: ConsumerContextFilter\n写入调用上下文
+ConsumerFilters -> ConsumerFilters: Monitor / ActiveLimit 等
+ConsumerFilters -> Remote: invoke(invocation)
+Remote -> ProviderFilters: 网络请求
+ProviderFilters -> ProviderFilters: ContextFilter 恢复上下文
+ProviderFilters -> ProviderFilters: Token / ExecuteLimit 等校验
+ProviderFilters -> ProviderFilters: Monitor 统计调用
+ProviderFilters -> Business: invoke(invocation)
+Business --> ProviderFilters: RpcResult 或异常
+ProviderFilters -> ProviderFilters: ExceptionFilter 规范化异常
+ProviderFilters --> Remote: Response
+Remote --> ConsumerFilters: Result
+ConsumerFilters -> ConsumerFilters: finally 清理线程上下文
+
+note over ConsumerFilters,ProviderFilters
+每个 Filter 只处理横切职责，并通过
+next.invoke(invocation) 决定是否继续责任链。
+end note
+@enduml

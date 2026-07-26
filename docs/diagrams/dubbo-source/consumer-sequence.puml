@@ -1,0 +1,81 @@
+@startuml
+title Consumer 服务引用与代理创建
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Spring 容器" as Spring
+participant ReferenceBean
+participant ReferenceConfig
+participant RegistryProtocol
+participant RegistryDirectory
+participant Registry
+participant DubboProtocol
+participant "Exchangers /\nNettyClient" as Remoting
+participant Cluster
+participant ProxyFactory
+
+Spring -> ReferenceBean: getObject()
+activate ReferenceBean
+ReferenceBean -> ReferenceConfig: get()
+activate ReferenceConfig
+ReferenceConfig -> ReferenceConfig: init()
+ReferenceConfig -> ReferenceConfig: createProxy(map)
+
+group 创建动态目录并订阅 Provider
+  ReferenceConfig -> RegistryProtocol: refer(interfaceClass, registryURL)
+  activate RegistryProtocol
+  RegistryProtocol -> RegistryDirectory: new RegistryDirectory(type, url)
+  activate RegistryDirectory
+  RegistryProtocol -> RegistryDirectory: subscribe(consumerURL)
+  RegistryDirectory -> Registry: subscribe(url, this)
+  activate Registry
+  Registry --> RegistryDirectory: notify(providerURLs)
+  deactivate Registry
+end
+
+group Provider URL 转换为远程 Invoker
+  RegistryDirectory -> RegistryDirectory: notify(urls)
+  RegistryDirectory -> RegistryDirectory: refreshInvoker(urls)
+  RegistryDirectory -> RegistryDirectory: toInvokers(urls)
+  RegistryDirectory -> DubboProtocol: refer(serviceType, providerURL)
+  activate DubboProtocol
+  DubboProtocol -> Remoting: getClients() / Exchangers.connect()
+  activate Remoting
+  Remoting --> DubboProtocol: ExchangeClient
+  deactivate Remoting
+  DubboProtocol --> RegistryDirectory: DubboInvoker
+  deactivate DubboProtocol
+  deactivate RegistryDirectory
+end
+
+group 组合集群 Invoker 并创建接口代理
+  RegistryProtocol -> Cluster: MockClusterWrapper.join(directory)
+  activate Cluster
+  Cluster -> Cluster: FailoverCluster.join(directory)
+  Cluster --> RegistryProtocol: MockClusterInvoker
+  deactivate Cluster
+  RegistryProtocol --> ReferenceConfig: ClusterInvoker
+  deactivate RegistryProtocol
+  ReferenceConfig -> ProxyFactory: getProxy(invoker)
+  activate ProxyFactory
+  ProxyFactory --> ReferenceConfig: GreetingService 动态代理
+  deactivate ProxyFactory
+end
+
+ReferenceConfig --> ReferenceBean: GreetingService 代理
+deactivate ReferenceConfig
+ReferenceBean --> Spring: Spring Bean
+deactivate ReferenceBean
+@enduml

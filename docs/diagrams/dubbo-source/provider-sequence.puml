@@ -1,0 +1,70 @@
+@startuml
+title Provider 服务暴露与注册
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Spring 容器" as Spring
+participant ServiceBean
+participant ServiceConfig
+participant ProxyFactory
+participant RegistryProtocol
+participant DubboProtocol
+participant "Exchangers /\nTransporters" as Remoting
+participant Registry
+
+Spring -> ServiceBean: afterPropertiesSet()\n或 onApplicationEvent()
+activate ServiceBean
+ServiceBean -> ServiceConfig: export()
+activate ServiceConfig
+ServiceConfig -> ServiceConfig: doExport()
+ServiceConfig -> ServiceConfig: doExportUrls()
+ServiceConfig -> ServiceConfig: doExportUrlsFor1Protocol()
+
+group 生成 Provider Invoker
+  ServiceConfig -> ProxyFactory: getInvoker(ref, interfaceClass, registryURL)
+  activate ProxyFactory
+  ProxyFactory --> ServiceConfig: AbstractProxyInvoker
+  deactivate ProxyFactory
+end
+
+group 本地导出并启动端口
+  ServiceConfig -> RegistryProtocol: export(invoker)
+  activate RegistryProtocol
+  RegistryProtocol -> RegistryProtocol: doLocalExport()
+  RegistryProtocol -> DubboProtocol: export(providerInvoker)
+  activate DubboProtocol
+  DubboProtocol -> DubboProtocol: exporterMap.put(serviceKey, exporter)
+  DubboProtocol -> DubboProtocol: openServer(url)
+  DubboProtocol -> DubboProtocol: createServer(url)
+  DubboProtocol -> Remoting: Exchangers.bind(url, requestHandler)
+  activate Remoting
+  Remoting --> DubboProtocol: ExchangeServer
+  deactivate Remoting
+  DubboProtocol --> RegistryProtocol: Exporter
+  deactivate DubboProtocol
+end
+
+group 注册 Provider URL
+  RegistryProtocol -> Registry: register(providerUrl)
+  activate Registry
+  Registry --> RegistryProtocol: 注册完成
+  deactivate Registry
+  RegistryProtocol --> ServiceConfig: DestroyableExporter
+  deactivate RegistryProtocol
+end
+
+deactivate ServiceConfig
+deactivate ServiceBean
+@enduml

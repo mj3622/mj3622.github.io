@@ -1,0 +1,49 @@
+@startuml
+title Provider 优雅停机与服务下线
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "JVM / Spring" as Lifecycle
+participant "DubboShutdownHook" as Hook
+participant "Registry" as Registry
+participant "Consumer RegistryDirectory" as Directory
+participant "RegistryProtocol" as RegistryProtocol
+participant "DubboProtocol" as DubboProtocol
+participant "HeaderExchangeServer" as Server
+participant "Consumer Channel" as Consumer
+
+Lifecycle -> Hook: run() / destroyAll()
+Hook -> Registry: AbstractRegistryFactory.destroyAll()
+Registry -> Registry: unregister(dynamic Provider URL)
+Registry --> Directory: Provider 地址删除通知
+Directory -> Directory: refreshInvoker() 移除 Invoker
+Hook -> DubboProtocol: destroy()
+DubboProtocol -> Server: close(shutdownTimeout)
+Server -> Server: startClose()
+Server -> Consumer: 发送 readonly event
+Consumer -> Consumer: 标记 Channel 为 readonly\nDubboInvoker 不再 available
+Server -> Server: 在超时窗口内等待连接结束
+Server -> Server: 关闭 server、channel 和线程池
+Hook -> RegistryProtocol: destroy()
+RegistryProtocol -> RegistryProtocol: DestroyableExporter#unexport()
+RegistryProtocol -> Registry: unregister / unsubscribe
+RegistryProtocol -> RegistryProtocol: 异步等待 shutdown timeout\n再执行内部 exporter.unexport()
+
+note over RegistryProtocol,Server
+全局 Hook 先销毁 Registry，再逐个 destroy 已加载 Protocol。
+RegistryProtocol 的异步等待不是 DubboProtocol 关闭前的严格屏障；
+2.6.12 也不按正在执行的请求数做精确 drain。
+end note
+@enduml

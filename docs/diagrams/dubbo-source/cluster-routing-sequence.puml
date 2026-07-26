@@ -1,0 +1,52 @@
+@startuml
+title 路由、负载均衡与 Failover 容错
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Consumer 代理" as Proxy
+participant "FailoverClusterInvoker" as Cluster
+participant "RegistryDirectory" as Directory
+participant "Router" as Router
+participant "LoadBalance" as LoadBalance
+participant "Provider Invoker" as Provider
+
+Proxy -> Cluster: invoke(invocation)
+Cluster -> Directory: list(invocation)
+Directory -> Directory: doList(invocation)\n按方法取得候选 Invoker
+Directory -> Router: route(invokers, consumerUrl, invocation)
+Router --> Directory: 路由后的候选列表
+Directory --> Cluster: candidates
+Cluster -> Cluster: 获取方法级 loadbalance\n默认 random
+
+loop retries + 1 次（默认 3 次）
+  alt 重试轮次
+    Cluster -> Directory: list(invocation)\n重新读取最新地址
+    Directory --> Cluster: refreshed candidates
+  end
+  Cluster -> LoadBalance: select(candidates)
+  LoadBalance --> Cluster: selected Invoker
+  Cluster -> Provider: invoke(invocation)
+  alt 成功
+    Provider --> Cluster: Result
+    Cluster --> Proxy: Result
+  else 业务异常
+    Provider --> Cluster: biz RpcException
+    Cluster --> Proxy: 立即抛出，不重试
+  else 网络或非业务异常
+    Provider --> Cluster: RpcException
+    Cluster -> Cluster: 记录失败节点并进入下一轮
+  end
+end
+@enduml

@@ -1,0 +1,56 @@
+@startuml
+title 注册中心失败重试与断线恢复
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Provider / Consumer" as App
+participant "FailbackRegistry" as Failback
+participant "失败任务集合" as Failed
+participant "ZookeeperRegistry" as Registry
+participant "ZooKeeper" as ZK
+participant "重试定时线程" as Retry
+
+alt 初次注册失败且 check=false
+  App -> Failback: register(providerUrl)
+  Failback -> Registry: doRegister(url)
+  Registry -> ZK: create(ephemeralNode)
+  ZK --> Registry: 失败
+  Failback -> Failed: failedRegistered.add(url)
+else 初次订阅失败
+  App -> Failback: subscribe(url, listener)
+  Failback -> Registry: doSubscribe(...)
+  Registry -> ZK: addChildListener(...)
+  ZK --> Registry: 失败
+  Failback -> Failback: 有缓存则先 notify(cache)
+  Failback -> Failed: failedSubscribed.add(...)
+end
+
+loop 默认每 5 秒
+  Retry -> Failback: retry()
+  Failback -> Registry: doRegister / doSubscribe
+  alt 成功
+    Failback -> Failed: remove(successTask)
+  else 仍失败
+    Failback -> Failed: 保留，下一轮继续
+  end
+end
+
+ZK --> Registry: StateListener.RECONNECTED
+Registry -> Failback: recover()
+Failback -> Failed: 把当前 registered 和 subscribed\n重新加入失败任务集合
+Retry -> Registry: 重建临时节点和监听器
+Registry -> ZK: create / addChildListener
+ZK --> App: 最新地址通知
+@enduml

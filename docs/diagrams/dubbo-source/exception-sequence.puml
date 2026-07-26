@@ -1,0 +1,46 @@
+@startuml
+title Provider 异常的包装、传输与重新抛出
+
+skinparam backgroundColor #F8FAFC
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam sequence {
+  ArrowColor #2563EB
+  ActorBorderColor #1E40AF
+  LifeLineBorderColor #94A3B8
+  ParticipantBorderColor #2563EB
+  ParticipantBackgroundColor #EFF6FF
+  ParticipantFontColor #172554
+  GroupBorderColor #94A3B8
+  GroupBackgroundColor #F8FAFC
+}
+
+participant "Consumer 业务代码" as Consumer
+participant "InvokerInvocationHandler" as Proxy
+participant "Provider 业务方法" as Business
+participant "AbstractProxyInvoker" as ProviderInvoker
+participant "ExceptionFilter" as Filter
+participant "DubboCodec" as Codec
+participant "DefaultFuture" as Future
+participant "RpcResult" as Result
+
+Consumer -> Proxy: service.method()
+Proxy -> Business: 远程调用
+Business --> ProviderInvoker: 抛出业务异常
+ProviderInvoker -> ProviderInvoker: 捕获 InvocationTargetException
+ProviderInvoker -> Result: new RpcResult(targetException)
+Result -> Filter: 返回含异常的 Result
+
+alt 已声明 / 可安全传输的异常
+  Filter --> Codec: 保留原异常
+else 未声明且异常类可能不在 Consumer
+  Filter -> Filter: Provider 记录错误日志
+  Filter --> Codec: 包装为 RuntimeException(异常文本)
+end
+
+Codec -> Codec: RESPONSE_WITH_EXCEPTION\n并序列化 Throwable
+Codec --> Future: Response(requestId)
+Future --> Proxy: RpcResult
+Proxy -> Result: recreate()
+Result --> Consumer: 在 Consumer 调用栈重新抛出异常
+@enduml
