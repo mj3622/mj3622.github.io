@@ -4,7 +4,7 @@ published: 2026-07-26
 description: 结合 Dubbo Demo 的真实日志，记录三个调用故障的排查过程。
 tags: [Java, Dubbo, RPC, 故障排查]
 category: 学习笔记
-draft: true
+draft: false
 ---
 
 为了观察不同故障在日志里是什么样子，我写了三个可以稳定复现问题的 Dubbo Demo。每个 Demo 只设置一个故障条件，再同时查看 Provider 和 Consumer 的输出，把一次调用经过的过程还原出来。
