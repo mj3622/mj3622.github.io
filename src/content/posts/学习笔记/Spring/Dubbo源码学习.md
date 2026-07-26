@@ -4,7 +4,7 @@ published: 2026-07-26
 description: 以函数调用为主线阅读 Dubbo 2.6.12，串联服务暴露、引用、远程调用、地址刷新、集群治理、线程派发、编解码、异常与恢复机制。
 tags: [Java, Dubbo, RPC, 源码分析]
 category: 学习笔记
-draft: true
+draft: false
 ---
 
 调用一个 Dubbo 接口时，业务代码只看到一个普通的 Java 方法，框架内部却要完成服务导出、地址注册、服务订阅、代理创建、网络通信和结果返回。
