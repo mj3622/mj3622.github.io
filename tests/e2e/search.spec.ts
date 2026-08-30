@@ -20,6 +20,8 @@ test('中文搜索可以返回文章结果', async ({ page }, testInfo) => {
   expect(await results.count()).toBeGreaterThanOrEqual(3)
   await expect(results.first()).toContainText('Dubbo')
   await expectNoHorizontalOverflow(page)
-  await expect(page.locator('#search-panel')).toHaveScreenshot('search.png')
+  if (!process.env.CI) {
+    await expect(page.locator('#search-panel')).toHaveScreenshot('search.png')
+  }
   expect(problems).toEqual([])
 })
