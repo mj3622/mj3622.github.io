@@ -1,4 +1,5 @@
 import type {
+  ExpressiveCodeConfig,
   LicenseConfig,
   NavBarConfig,
   ProfileConfig,
@@ -9,7 +10,7 @@ import { LinkPreset } from './types/config'
 export const siteConfig: SiteConfig = {
   title: 'Minjer',
   subtitle: 'Blog Site',
-  lang: 'en',         // 'en', 'zh_CN', 'zh_TW', 'ja', 'ko'
+  lang: 'zh_CN',      // 'en', 'zh_CN', 'zh_TW', 'ja', 'ko'
   themeColor: {
     hue: 250,         // Default hue for the theme color, from 0 to 360. e.g. red: 0, teal: 200, cyan: 250, pink: 345
     fixed: false,     // Hide the theme color picker for visitors
@@ -34,13 +35,17 @@ export const siteConfig: SiteConfig = {
     //   theme: 'light',              // (Optional) Either 'light' or 'dark', set only if you have different favicons for light and dark mode
     //   sizes: '32x32',              // (Optional) Size of the favicon, set only if you have favicons of different sizes
     // }
-  ]
+  ],
+  analytics: {
+    cloudflareToken: import.meta.env.PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN || '',
+  },
 }
 
 export const navBarConfig: NavBarConfig = {
   links: [
     LinkPreset.Home,
     LinkPreset.Archive,
+    LinkPreset.Updated,
     LinkPreset.About,
     {
       name: 'GitHub',
@@ -58,7 +63,7 @@ export const profileConfig: ProfileConfig = {
     {
       name: 'Email',
       icon: 'mage:email',
-      url: 'mailto:lizw@hust.edu.cn',
+      url: 'mailto:minjer@foxmail.com',
     },
     {
       name: 'University',
@@ -87,4 +92,8 @@ export const licenseConfig: LicenseConfig = {
   enable: true,
   name: 'CC BY-NC-SA 4.0',
   url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+}
+
+export const expressiveCodeConfig: ExpressiveCodeConfig = {
+  theme: 'github-dark',
 }

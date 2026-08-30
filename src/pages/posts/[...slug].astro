@@ -1,16 +1,23 @@
 ---
-import path from 'node:path'
-import { getCollection } from 'astro:content'
+import { getCollection, render } from 'astro:content'
 import License from '@components/misc/License.astro'
 import Markdown from '@components/misc/Markdown.astro'
+import RelatedPosts from '@components/RelatedPosts.astro'
+import SeriesNavigation from '@components/SeriesNavigation.astro'
+import ShareActions from '@components/ShareActions.svelte'
 import I18nKey from '@i18n/i18nKey'
 import { i18n } from '@i18n/translation'
 import MainGridLayout from '@layouts/MainGridLayout.astro'
-import { url, getDir, getPostUrlBySlug } from '@utils/url-utils'
+import {
+  getRelatedPosts,
+  getSeriesContext,
+  getSortedPosts,
+} from '@utils/content-utils'
+import { getPostUrlBySlug, url } from '@utils/url-utils'
 import { Icon } from 'astro-icon/components'
 import { licenseConfig } from 'src/config'
-import PostMetadata from '../../components/PostMeta.astro'
 import ImageWrapper from '../../components/misc/ImageWrapper.astro'
+import PostMetadata from '../../components/PostMeta.astro'
 import { profileConfig, siteConfig } from '../../config'
 import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 
@@ -19,38 +26,37 @@ export async function getStaticPaths() {
     return import.meta.env.PROD ? data.draft !== true : true
   })
   return blogEntries.map(entry => ({
-    params: { slug: entry.slug },
+    params: { slug: entry.id },
     props: { entry },
   }))
 }
 
 const { entry } = Astro.props
-const { Content, headings } = await entry.render()
+const renderedEntry = await render(entry)
+const { Content, headings } = renderedEntry
+const { remarkPluginFrontmatter } = renderedEntry as typeof renderedEntry & {
+  remarkPluginFrontmatter: {
+    words: number
+    minutes: number
+  }
+}
+const allPosts = await getSortedPosts()
+const seriesContext = getSeriesContext(entry, allPosts)
+const relatedPosts = getRelatedPosts(entry, allPosts)
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site).toString()
 
-const { remarkPluginFrontmatter } = await entry.render()
-const postAssetBasePath = path.join('content/posts/', getDir(entry.id))
-
-const coverImage = entry.data.image?.trim()
+const coverImage = entry.data.image
 let coverImageForJsonLd: string | undefined
 
-if (coverImage) {
-  if (coverImage.startsWith('http://') || coverImage.startsWith('https://')) {
-    coverImageForJsonLd = coverImage
-  } else if (coverImage.startsWith('/')) {
-    coverImageForJsonLd = new URL(url(coverImage), Astro.site).toString()
-  } else {
-    const files = import.meta.glob<ImageMetadata>('../../**', {
-      import: 'default',
-    })
-    const normalizedPath = path
-      .normalize(path.join('../../', postAssetBasePath, coverImage))
-      .replace(/\\/g, '/')
-    const file = files[normalizedPath]
-    if (file) {
-      const image = await file()
-      coverImageForJsonLd = new URL(image.src, Astro.site).toString()
-    }
+if (typeof coverImage === 'string') {
+  const imageUrl = coverImage.trim()
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    coverImageForJsonLd = imageUrl
+  } else if (imageUrl.startsWith('/')) {
+    coverImageForJsonLd = new URL(url(imageUrl), Astro.site).toString()
   }
+} else if (coverImage) {
+  coverImageForJsonLd = new URL(coverImage.src, Astro.site).toString()
 }
 
 const jsonLd = {
@@ -65,15 +71,18 @@ const jsonLd = {
     url: Astro.site,
   },
   datePublished: formatDateToYYYYMMDD(entry.data.published),
+  dateModified: formatDateToYYYYMMDD(
+    entry.data.updated ?? entry.data.published,
+  ),
   inLanguage: entry.data.lang
     ? entry.data.lang.replace('_', '-')
     : siteConfig.lang.replace('_', '-'),
   ...(coverImageForJsonLd ? { image: coverImageForJsonLd } : {}),
 }
 ---
-<MainGridLayout banner={entry.data.image} bannerBasePath={postAssetBasePath} title={entry.data.title} description={entry.data.description} lang={entry.data.lang} setOGTypeArticle={true} headings={headings} sidebarMode="toc">
+<MainGridLayout title={entry.data.title} description={entry.data.description} lang={entry.data.lang} setOGTypeArticle={true} ogImage={coverImageForJsonLd} ogImageAlt={entry.data.title} headings={headings} sidebarMode="toc">
     <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+    <article class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
         <div id="post-container" class:list={["card-base z-10 px-6 md:px-9 pt-6 pb-4 relative w-full ",
             {}
         ]}>
@@ -95,7 +104,7 @@ const jsonLd = {
 
             <!-- title -->
             <div class="relative onload-animation">
-                <div
+                <h1
                     data-pagefind-body data-pagefind-weight="10" data-pagefind-meta="title"
                     class="transition w-full block font-bold mb-3
                     text-3xl md:text-[2.25rem]/[2.75rem]
@@ -104,7 +113,7 @@ const jsonLd = {
                     before:absolute before:top-[0.75rem] before:left-[-1.125rem]
                 ">
                     {entry.data.title}
-                </div>
+                </h1>
             </div>
 
             <!-- metadata -->
@@ -112,8 +121,10 @@ const jsonLd = {
                 <PostMetadata
                         class="mb-5"
                         published={entry.data.published}
+                        updated={entry.data.updated}
                         tags={entry.data.tags}
                         category={entry.data.category}
+                        showDateLabels={true}
                 ></PostMetadata>
                 {!entry.data.image && <div class="border-[var(--line-divider)] border-dashed border-b-[1px] mb-5"></div>}
             </div>
@@ -121,7 +132,7 @@ const jsonLd = {
             <!-- always show cover as long as it has one -->
 
             {entry.data.image &&
-                <ImageWrapper id="post-cover" src={entry.data.image} basePath={postAssetBasePath} class="mb-8 rounded-xl banner-container onload-animation"/>
+                <ImageWrapper id="post-cover" src={entry.data.image} layout="constrained" sizes="(min-width: 1024px) 52rem, calc(100vw - 3rem)" class="mb-8 rounded-xl banner-container onload-animation"/>
             }
 
 
@@ -129,10 +140,15 @@ const jsonLd = {
                 <Content />
             </Markdown>
 
-            {licenseConfig.enable && <License title={entry.data.title} slug={entry.slug} pubDate={entry.data.published} class="mb-6 rounded-xl license-container onload-animation"></License>}
+            <ShareActions title={entry.data.title} url={canonicalUrl} client:idle />
+
+            {licenseConfig.enable && <License title={entry.data.title} pubDate={entry.data.published} class="mb-6 rounded-xl license-container onload-animation"></License>}
 
         </div>
-    </div>
+    </article>
+
+    {seriesContext && <SeriesNavigation context={seriesContext} />}
+    <RelatedPosts posts={relatedPosts} />
 
     <div class="flex flex-col md:flex-row justify-between mb-4 gap-4 overflow-hidden w-full">
         <a href={entry.data.nextSlug ? getPostUrlBySlug(entry.data.nextSlug) : "#"}

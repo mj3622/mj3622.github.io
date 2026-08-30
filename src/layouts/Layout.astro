@@ -1,11 +1,14 @@
 ---
 import GlobalStyles from '@components/GlobalStyles.astro'
+import PwaStatus from '@components/PwaStatus.svelte'
 import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
+import '../base.css'
+import { ClientRouter } from 'astro:transitions'
 
-import { profileConfig, siteConfig } from '@/config'
 import ConfigCarrier from '@components/ConfigCarrier.astro'
+import { profileConfig, siteConfig } from '@/config'
 import {
   AUTO_MODE,
   BANNER_HEIGHT,
@@ -18,7 +21,7 @@ import {
 } from '../constants/constants'
 import { defaultFavicons } from '../constants/icon'
 import type { Favicon } from '../types/config'
-import { url, pathsEqual } from '../utils/url-utils'
+import { pathsEqual, url } from '../utils/url-utils'
 
 interface Props {
   title?: string
@@ -26,13 +29,22 @@ interface Props {
   description?: string
   lang?: string
   setOGTypeArticle?: boolean
+  ogImage?: string
+  ogImageAlt?: string
 }
 
-let { title, banner, description, lang, setOGTypeArticle } = Astro.props
+let {
+  title,
+  banner,
+  description,
+  lang,
+  setOGTypeArticle,
+  ogImage,
+  ogImageAlt,
+} = Astro.props
 
 // apply a class to the body element to decide the height of the banner, only used for initial page load
-// Swup can update the body for each page visit, but it's after the page transition, causing a delay for banner height change
-// so use Swup hooks instead to change the height immediately when a link is clicked
+// Update the body state before ClientRouter swaps the page to avoid a delayed banner resize
 const isHomePage = pathsEqual(Astro.url.pathname, url('/'))
 
 // defines global css variables
@@ -53,6 +65,8 @@ if (title) {
 
 const favicons: Favicon[] =
   siteConfig.favicon.length > 0 ? siteConfig.favicon : defaultFavicons
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url)
+const analyticsToken = siteConfig.analytics.cloudflareToken.trim()
 
 // const siteLang = siteConfig.lang.replace('_', '-')
 if (!lang) {
@@ -79,25 +93,38 @@ const bannerOffset =
 
 		<meta charset="UTF-8" />
 		<meta name="description" content={description || pageTitle}>
-		<meta name="author" content={profileConfig.name}>
+			<meta name="author" content={profileConfig.name}>
+			<link rel="canonical" href={canonicalURL}>
 
-		<meta property="og:site_name" content={siteConfig.title}>
-		<meta property="og:url" content={Astro.url}>
-		<meta property="og:title" content={pageTitle}>
-		<meta property="og:description" content={description || pageTitle}>
+			<meta property="og:site_name" content={siteConfig.title}>
+			<meta property="og:url" content={canonicalURL}>
+			<meta property="og:title" content={pageTitle}>
+			<meta property="og:description" content={description || pageTitle}>
 		{setOGTypeArticle ? (
         <meta property="og:type" content="article" />
         ) : (
         <meta property="og:type" content="website" />
         )}
 
-		<meta name="twitter:card" content="summary_large_image">
-		<meta property="twitter:url" content={Astro.url}>
-		<meta name="twitter:title" content={pageTitle}>
-		<meta name="twitter:description" content={description || pageTitle}>
+			<meta name="twitter:card" content="summary_large_image">
+			<meta name="twitter:url" content={canonicalURL}>
+			<meta name="twitter:title" content={pageTitle}>
+			<meta name="twitter:description" content={description || pageTitle}>
+			{ogImage && (
+				<>
+					<meta property="og:image" content={ogImage}>
+					<meta property="og:image:alt" content={ogImageAlt || title || siteConfig.title}>
+					<meta name="twitter:image" content={ogImage}>
+					<meta name="twitter:image:alt" content={ogImageAlt || title || siteConfig.title}>
+				</>
+			)}
 
 		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
+			<meta name="generator" content={Astro.generator} />
+			<meta name="theme-color" content="#6ea8e5" />
+			<link rel="manifest" href={url('/manifest.webmanifest')} />
+			<link rel="apple-touch-icon" href={url('/favicon/favicon-light-192.png')} />
+			<ClientRouter fallback="swap" />
 		{favicons.map(favicon => (
 			<link rel="icon"
 				  href={favicon.src.startsWith('/') ? url(favicon.src) : favicon.src}
@@ -143,18 +170,25 @@ const bannerOffset =
 
 		<slot name="head"></slot>
 
-		<link rel="stylesheet" href="https://cdn.staticfile.net/KaTeX/0.16.9/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
-
-		<link rel="alternate" type="application/rss+xml" title={profileConfig.name} href={`${Astro.site}rss.xml`}/>
+			<link rel="alternate" type="application/rss+xml" title={profileConfig.name} href={`${Astro.site}rss.xml`}/>
+			{analyticsToken && (
+				<script
+					is:inline
+					defer
+					src="https://static.cloudflareinsights.com/beacon.min.js"
+					data-cf-beacon={JSON.stringify({ token: analyticsToken })}
+				></script>
+			)}
 
 	</head>
-	<body class=" min-h-screen transition " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner}]}
+	<body class=" min-h-screen transition " class:list={[{"is-home": isHomePage, "enable-banner": enableBanner}]}
 		  data-overlayscrollbars-initialize
 	>
 		<ConfigCarrier></ConfigCarrier>
 		<GlobalStyles>
 		<slot />
 		</GlobalStyles>
+		<PwaStatus client:load />
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
 		<div id="page-height-extend" class="hidden h-[300vh]"></div>
@@ -172,35 +206,42 @@ const bannerOffset =
 	'banner-height-home': `${BANNER_HEIGHT_HOME}vh`,
 	'banner-height': `${BANNER_HEIGHT}vh`,
 }}>
-@tailwind components;
+@reference "../base.css";
 @layer components {
-	.enable-banner.is-home #banner-wrapper {
-		@apply h-[var(--banner-height-home)] translate-y-[var(--banner-height-extend)]
-	}
 	.enable-banner #banner-wrapper {
 		@apply h-[var(--banner-height-home)]
 	}
 
-	.enable-banner.is-home #banner {
-		@apply h-[var(--banner-height-home)] translate-y-0
-	}
 	.enable-banner #banner {
 		@apply h-[var(--banner-height-home)] translate-y-[var(--bannerOffset)]
-	}
-	.enable-banner.is-home #main-grid {
-		@apply translate-y-[var(--banner-height-extend)];
 	}
 	.enable-banner #top-row {
 		@apply h-[calc(var(--banner-height-home)_-_4.5rem)] transition-all duration-300
 	}
-	.enable-banner.is-home #sidebar-sticky {
-		@apply top-[calc(1rem_-_var(--banner-height-extend))]
-	}
 	.navbar-hidden {
 		@apply opacity-0 -translate-y-16
 	}
+
+	@media (min-width: 64rem) {
+		.enable-banner.is-home #banner-wrapper {
+			@apply h-[var(--banner-height-home)] translate-y-[var(--banner-height-extend)]
+		}
+		.enable-banner.is-home #banner {
+			@apply h-[var(--banner-height-home)] translate-y-0
+		}
+		.enable-banner.is-home #main-grid {
+			@apply translate-y-[var(--banner-height-extend)];
+		}
+		.enable-banner.is-home #sidebar-sticky {
+			@apply top-[calc(1rem_-_var(--banner-height-extend))]
+		}
+	}
 }
 </style>
+
+<script>
+import '../pwa'
+</script>
 
 <script>
 import 'overlayscrollbars/overlayscrollbars.css';
@@ -282,16 +323,6 @@ function initCustomScrollbar() {
 			autoHideSuspend: false,
 		},
 	});
-	document.querySelectorAll('pre').forEach((ele) => {
-		OverlayScrollbars(ele, {
-			scrollbars: {
-				theme: 'scrollbar-base scrollbar-dark px-2',
-				autoHide: 'leave',
-				autoHideDelay: 500,
-				autoHideSuspend: false
-			}
-		});
-	});
 }
 
 function showBanner() {
@@ -317,78 +348,33 @@ init();
 /* astro:after-swap event happened before swap animation */
 document.addEventListener('astro:after-swap', init);
 
-const setup = () => {
-	window.swup.hooks.on('link:click', () => {
-		// Remove the delay for the first time page load
-		document.documentElement.style.setProperty('--content-delay', '0ms')
+document.addEventListener('astro:before-preparation', event => {
+	document.documentElement.style.setProperty('--content-delay', '0ms')
 
-		// prevent elements from overlapping the navbar
-		if (!bannerEnabled) {
-			return
-		}
-		let threshold = window.innerHeight * (BANNER_HEIGHT / 100) - 72 - 16
-		let navbar = document.getElementById('navbar-wrapper')
-		if (!navbar || !document.body.classList.contains('lg:is-home')) {
-			return
-		}
-		if (document.body.scrollTop >= threshold || document.documentElement.scrollTop >= threshold) {
-			navbar.classList.add('navbar-hidden')
-		}
-	})
-	window.swup.hooks.on('content:replace', initCustomScrollbar)
-	window.swup.hooks.on('visit:start', (visit: {to: {url: string}}) => {
-		// change banner height immediately when a link is clicked
-		const bodyElement = document.querySelector('body')
-		if (pathsEqual(visit.to.url, url('/'))) {
-			bodyElement!.classList.add('lg:is-home');
-		} else {
-			bodyElement!.classList.remove('lg:is-home');
-		}
+	const transition = event as Event & { to: URL }
+	const bodyElement = document.body
+	bodyElement.classList.toggle('is-home', pathsEqual(transition.to.pathname, url('/')))
 
-		// increase the page height during page transition to prevent the scrolling animation from jumping
-		const heightExtend = document.getElementById('page-height-extend')
-		if (heightExtend) {
-			heightExtend.classList.remove('hidden')
-		}
+	const heightExtend = document.getElementById('page-height-extend')
+	heightExtend?.classList.remove('hidden')
+	document.getElementById('toc-wrapper')?.classList.add('toc-not-ready')
 
-		// Hide the TOC while scrolling back to top
-		let toc = document.getElementById('toc-wrapper');
-		if (toc) {
-			toc.classList.add('toc-not-ready')
-		}
-	});
-	window.swup.hooks.on('page:view', () => {
-		// hide the temp high element when the transition is done
-		const heightExtend = document.getElementById('page-height-extend')
-		if (heightExtend) {
-			heightExtend.classList.remove('hidden')
-		}
-	});
-	window.swup.hooks.on('visit:end', (visit: {to: {url: string}}) => {
-		setTimeout(() => {
-			const heightExtend = document.getElementById('page-height-extend')
-			if (heightExtend) {
-				heightExtend.classList.add('hidden')
-			}
+	if (!bannerEnabled || !bodyElement.classList.contains('is-home')) return
+	const threshold = window.innerHeight * (BANNER_HEIGHT / 100) - 72 - 16
+	if (document.documentElement.scrollTop >= threshold) {
+		document.getElementById('navbar-wrapper')?.classList.add('navbar-hidden')
+	}
+})
 
-            // Just make the transition looks better
-            const toc = document.getElementById('toc-wrapper');
-            if (toc) {
-                toc.classList.remove('toc-not-ready')
-            }
-        }, 200)
-	});
-}
-if (window?.swup?.hooks) {
-	setup()
-} else {
-	document.addEventListener('swup:enable', setup)
-}
+document.addEventListener('astro:page-load', () => {
+	document.getElementById('page-height-extend')?.classList.add('hidden')
+	document.getElementById('toc-wrapper')?.classList.remove('toc-not-ready')
+})
 
-let backToTopBtn = document.getElementById('back-to-top-btn');
-let toc = document.getElementById('toc-wrapper');
-let navbar = document.getElementById('navbar-wrapper')
 function scrollFunction() {
+	const backToTopBtn = document.getElementById('back-to-top-btn')
+	const toc = document.getElementById('toc-wrapper')
+	const navbar = document.getElementById('navbar-wrapper')
 	let bannerHeight = window.innerHeight * (BANNER_HEIGHT / 100)
 
 	if (backToTopBtn) {
@@ -413,7 +399,7 @@ function scrollFunction() {
 		const MAIN_PANEL_EXCESS_HEIGHT = MAIN_PANEL_OVERLAPS_BANNER_HEIGHT * 16			// The height the main panel overlaps the banner
 
 		let bannerHeight = BANNER_HEIGHT
-		if (document.body.classList.contains('lg:is-home') && window.innerWidth >= 1024) {
+		if (document.body.classList.contains('is-home') && window.innerWidth >= 1024) {
 			bannerHeight = BANNER_HEIGHT_HOME
 		}
 		let threshold = window.innerHeight * (bannerHeight / 100) - NAVBAR_HEIGHT - MAIN_PANEL_EXCESS_HEIGHT - 16
@@ -445,10 +431,11 @@ window.onresize = () => {
 import PhotoSwipeLightbox from "photoswipe/lightbox"
 import "photoswipe/style.css"
 
-let lightbox: PhotoSwipeLightbox
-let pswp = import("photoswipe")
+let lightbox: PhotoSwipeLightbox | undefined
+const pswp = import("photoswipe")
 
 function createPhotoSwipe() {
+	lightbox?.destroy()
 	lightbox = new PhotoSwipeLightbox({
 		gallery: ".custom-md img, #post-cover img",
 		pswpModule: () => pswp,
@@ -479,26 +466,15 @@ function createPhotoSwipe() {
 	lightbox.init()
 }
 
-const setup = () => {
-	if (!lightbox) {
+function initPhotoSwipe() {
+	if (document.querySelector(".custom-md img, #post-cover img")) {
 		createPhotoSwipe()
+	} else {
+		lightbox?.destroy()
+		lightbox = undefined
 	}
-	window.swup.hooks.on("page:view", () => {
-		createPhotoSwipe()
-	})
-
-	window.swup.hooks.on(
-		"content:replace",
-		() => {
-			lightbox?.destroy?.()
-		},
-		{ before: true },
-	)
 }
 
-if (window.swup) {
-	setup()
-} else {
-	document.addEventListener("swup:enable", setup)
-}
+initPhotoSwipe()
+document.addEventListener("astro:page-load", initPhotoSwipe)
 </script>

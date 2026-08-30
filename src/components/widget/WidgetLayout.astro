@@ -2,6 +2,7 @@
 import { Icon } from 'astro-icon/components'
 import I18nKey from '../../i18n/i18nKey'
 import { i18n } from '../../i18n/translation'
+
 interface Props {
   id: string
   name?: string
@@ -10,7 +11,6 @@ interface Props {
   class?: string
   style?: string
 }
-const props = Astro.props
 const { id, name, isCollapsed, collapsedHeight, style } = Astro.props
 const className = Astro.props.class
 ---

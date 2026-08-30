@@ -1,34 +1,59 @@
 ---
 import path from 'node:path'
+
 interface Props {
   id?: string
-  src: string
+  src: string | ImageMetadata
   class?: string
   alt?: string
   position?: string
   basePath?: string
+  loading?: 'eager' | 'lazy'
+  decoding?: 'async' | 'auto' | 'sync'
+  fetchpriority?: 'high' | 'low' | 'auto'
+  layout?: 'constrained' | 'fixed' | 'full-width' | 'none'
+  sizes?: string
 }
+
 import { Image } from 'astro:assets'
 import { url } from '../../utils/url-utils'
 
-const { id, src, alt, position = 'center', basePath = '/' } = Astro.props
+const {
+  id,
+  src,
+  alt,
+  position = 'center',
+  basePath = '/',
+  loading,
+  decoding,
+  fetchpriority,
+  layout,
+  sizes,
+} = Astro.props
 const className = Astro.props.class
 
-const isLocal = !(
-  src.startsWith('/') ||
-  src.startsWith('http') ||
-  src.startsWith('https') ||
-  src.startsWith('data:')
+const stringSource = typeof src === 'string' ? src : undefined
+const isMetadata = typeof src !== 'string'
+const isLocalString = Boolean(
+  stringSource &&
+    !(
+      stringSource.startsWith('/') ||
+      stringSource.startsWith('http') ||
+      stringSource.startsWith('data:')
+    ),
 )
-const isPublic = src.startsWith('/')
+const isPublic = stringSource?.startsWith('/') ?? false
 
-let img: ImageMetadata | undefined
-if (isLocal) {
-  const files = import.meta.glob<ImageMetadata>('../../**', {
-    import: 'default',
-  })
+let img: ImageMetadata | undefined = isMetadata ? src : undefined
+if (isLocalString && stringSource) {
+  const files = import.meta.glob<ImageMetadata>(
+    '../../assets/images/**/*.{png,jpg,jpeg,webp,gif,svg,avif}',
+    {
+      import: 'default',
+    },
+  )
   const normalizedPath = path
-    .normalize(path.join('../../', basePath, src))
+    .normalize(path.join('../../', basePath, stringSource))
     .replace(/\\/g, '/')
   const file = files[normalizedPath]
   if (file) {
@@ -45,6 +70,6 @@ const imageStyle = `object-position: ${position}`
 ---
 <div id={id} class:list={[className, 'overflow-hidden relative']}>
     <div class="transition absolute inset-0 dark:bg-black/10 bg-opacity-50 pointer-events-none"></div>
-    {isLocal && img && <Image src={img} alt={alt || ""} class={imageClass} style={imageStyle}/>}
-    {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle}/>}
+    {img && <Image src={img} alt={alt || ""} class={imageClass} style={imageStyle} loading={loading} decoding={decoding} fetchpriority={fetchpriority} layout={layout} sizes={sizes}/>}
+    {!img && stringSource && !isLocalString && <img src={isPublic ? url(stringSource) : stringSource} alt={alt || ""} class={imageClass} style={imageStyle} loading={loading} decoding={decoding} fetchpriority={fetchpriority}/>}
 </div>

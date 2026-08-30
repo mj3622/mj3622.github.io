@@ -8,23 +8,53 @@ import { url } from '../utils/url-utils'
 interface Props {
   class: string
   published: Date
+  updated?: Date
   tags: string[]
   category: string
   hideTagsForMobile?: boolean
+  showDateLabels?: boolean
 }
-const { published, tags, category, hideTagsForMobile = false } = Astro.props
+const {
+  published,
+  updated,
+  tags,
+  category,
+  hideTagsForMobile = false,
+  showDateLabels = false,
+} = Astro.props
 const className = Astro.props.class
+const showUpdated =
+  updated && formatDateToYYYYMMDD(updated) !== formatDateToYYYYMMDD(published)
 ---
 
 <div class:list={["flex flex-wrap text-neutral-500 dark:text-neutral-400 items-center gap-4 gap-x-4 gap-y-2", className]}>
+    <div class="hidden" data-pagefind-ignore>
+        <span data-pagefind-filter="category">{category || i18n(I18nKey.uncategorized)}</span>
+        {tags.map(tag => <span data-pagefind-filter="tag">{tag}</span>)}
+        <span data-pagefind-filter="year">{published.getFullYear()}</span>
+    </div>
+
     <!-- publish date -->
     <div class="flex items-center">
         <div class="meta-icon"
         >
             <Icon name="material-symbols:calendar-today-outline-rounded" class="text-xl"></Icon>
         </div>
-        <span class="text-50 text-sm font-medium">{formatDateToYYYYMMDD(published)}</span>
+        <span class="text-50 text-sm font-medium">
+            {showDateLabels && `${i18n(I18nKey.publishedAt)} `}{formatDateToYYYYMMDD(published)}
+        </span>
     </div>
+
+    {showUpdated && (
+        <div class="flex items-center">
+            <div class="meta-icon">
+                <Icon name="material-symbols:update-rounded" class="text-xl"></Icon>
+            </div>
+            <span class="text-50 text-sm font-medium">
+                {i18n(I18nKey.updatedAt)} {formatDateToYYYYMMDD(updated)}
+            </span>
+        </div>
+    )}
 
     <!-- categories -->
     <div class="flex items-center">

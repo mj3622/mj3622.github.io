@@ -59,7 +59,6 @@ const getDisplayText = (heading: MarkdownHeading) => {
   return normalizedText || text
 }
 
-// biome-ignore lint/style/useConst: heading1Count is incremented in the template loop.
 let heading1Count = 1
 
 const maxLevel = siteConfig.toc.depth

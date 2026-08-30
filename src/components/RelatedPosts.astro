@@ -1,0 +1,36 @@
+---
+import I18nKey from '@i18n/i18nKey'
+import { i18n } from '@i18n/translation'
+import type { PostEntry } from '@utils/content-utils'
+import { formatDateToYYYYMMDD } from '@utils/date-utils'
+import { getPostUrlBySlug } from '@utils/url-utils'
+import { Icon } from 'astro-icon/components'
+
+interface Props {
+  posts: PostEntry[]
+}
+
+const { posts } = Astro.props
+---
+
+{posts.length > 0 && (
+    <section class="card-base p-5 mb-4" aria-labelledby="related-heading">
+        <div class="flex items-center gap-2 mb-3">
+            <Icon name="material-symbols:auto-awesome-outline-rounded" class="text-2xl text-[var(--primary)]" />
+            <h2 id="related-heading" class="font-bold text-lg text-90">{i18n(I18nKey.relatedPosts)}</h2>
+        </div>
+        <div class="grid grid-cols-1 gap-2">
+            {posts.map(post => (
+                <a href={getPostUrlBySlug(post.id)} class="group btn-plain rounded-xl px-3 py-3 justify-between gap-3">
+                    <span class="min-w-0 text-left">
+                        <span class="block font-medium text-75 group-hover:text-[var(--primary)] truncate">{post.data.title}</span>
+                        <span class="block text-xs text-30 mt-1">
+                            {formatDateToYYYYMMDD(post.data.published)} · {post.data.category || i18n(I18nKey.uncategorized)}
+                        </span>
+                    </span>
+                    <Icon name="material-symbols:chevron-right-rounded" class="text-2xl text-[var(--primary)] shrink-0" />
+                </a>
+            ))}
+        </div>
+    </section>
+)}

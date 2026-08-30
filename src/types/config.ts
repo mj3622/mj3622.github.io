@@ -26,6 +26,10 @@ export type SiteConfig = {
   }
 
   favicon: Favicon[]
+
+  analytics: {
+    cloudflareToken: string
+  }
 }
 
 export type Favicon = {
@@ -38,6 +42,7 @@ export enum LinkPreset {
   Home = 0,
   Archive = 1,
   About = 2,
+  Updated = 3,
 }
 
 export type NavBarLink = {
@@ -67,22 +72,11 @@ export type LicenseConfig = {
   url: string
 }
 
+export type ExpressiveCodeConfig = {
+  theme: string
+}
+
 export type LIGHT_DARK_MODE =
   | typeof LIGHT_MODE
   | typeof DARK_MODE
   | typeof AUTO_MODE
-
-export type BlogPostData = {
-  body: string
-  title: string
-  published: Date
-  description: string
-  tags: string[]
-  draft?: boolean
-  image?: string
-  category?: string
-  prevTitle?: string
-  prevSlug?: string
-  nextTitle?: string
-  nextSlug?: string
-}

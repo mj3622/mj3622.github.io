@@ -1,7 +1,7 @@
 ---
+import BackToTop from '@components/control/BackToTop.astro'
 import Footer from '@components/Footer.astro'
 import Navbar from '@components/Navbar.astro'
-import BackToTop from '@components/control/BackToTop.astro'
 import SideBar from '@components/widget/SideBar.astro'
 import type { MarkdownHeading } from 'astro'
 import { Icon } from 'astro-icon/components'
@@ -22,6 +22,8 @@ interface Props {
   description?: string
   lang?: string
   setOGTypeArticle?: boolean
+  ogImage?: string
+  ogImageAlt?: string
   headings?: MarkdownHeading[]
   sidebarMode?: 'default' | 'toc'
 }
@@ -33,6 +35,8 @@ const {
   description,
   lang,
   setOGTypeArticle,
+  ogImage,
+  ogImageAlt,
   headings = [],
   sidebarMode = 'default',
 } = Astro.props
@@ -50,7 +54,7 @@ const shouldUseSidebarToc = sidebarMode === 'toc'
 const shouldShowRightToc = siteConfig.toc.enable && !shouldUseSidebarToc
 ---
 
-<Layout title={title} banner={banner} description={description} lang={lang} setOGTypeArticle={setOGTypeArticle}>
+<Layout title={title} banner={banner} description={description} lang={lang} setOGTypeArticle={setOGTypeArticle} ogImage={ogImage} ogImageAlt={ogImageAlt}>
 
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
@@ -66,6 +70,11 @@ const shouldShowRightToc = siteConfig.toc.enable && !shouldUseSidebarToc
                   src={resolvedBanner}
                   position={siteConfig.banner.position}
                   basePath={resolvedBannerBasePath}
+                  loading="eager"
+                  decoding="sync"
+                  fetchpriority="high"
+                  layout="full-width"
+                  sizes="100vw"
     >
     </ImageWrapper>
 </div>}
@@ -99,7 +108,7 @@ const shouldShowRightToc = siteConfig.toc.enable && !shouldUseSidebarToc
                                 before:w-1 before:h-4 before:rounded-md before:bg-[var(--primary)]
                                 before:absolute before:left-[-16px] before:top-[5.5px]">目录</div>
                             <div id="toc-inner-wrapper" class="max-h-[calc(100vh_-_8rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar px-2">
-                                <div id="toc" class="w-full transition-swup-fade">
+                                <div id="toc" class="w-full">
                                     <div class="h-2 w-full"></div>
                                     {siteConfig.toc.enable && <TOC headings={headings}></TOC>}
                                     <div class="h-2 w-full"></div>
@@ -109,21 +118,17 @@ const shouldShowRightToc = siteConfig.toc.enable && !shouldUseSidebarToc
                     </div>
                 </aside>
             ) : (
-                <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" headings={headings}></SideBar>
+                <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation"></SideBar>
             )}
 
-            <main id="swup-container" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
+            <main id="main-container" class="col-span-2 lg:col-span-1 overflow-hidden">
                 <div id="content-wrapper" class="onload-animation">
                     <!-- the overflow-hidden here prevent long text break the layout-->
-                    <!-- make id different from windows.swup global property -->
                     <slot></slot>
-                    <div class="footer col-span-2 onload-animation hidden lg:block">
-                        <Footer></Footer>
-                    </div>
                 </div>
             </main>
 
-            <div class="footer col-span-2 onload-animation block lg:hidden">
+            <div class="footer col-span-2 lg:col-start-2 lg:col-span-1 onload-animation">
                 <Footer></Footer>
             </div>
         </div>
@@ -140,7 +145,7 @@ const shouldShowRightToc = siteConfig.toc.enable && !shouldUseSidebarToc
             {"toc-hide": siteConfig.banner.enable}]}
         >
             <div id="toc-inner-wrapper" class="fixed top-14 w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar">
-                <div id="toc" class="w-full h-full transition-swup-fade ">
+                <div id="toc" class="w-full h-full">
                     <div class="h-8 w-full"></div>
                     <TOC headings={headings}></TOC>
                     <div class="h-8 w-full"></div>
@@ -148,7 +153,7 @@ const shouldShowRightToc = siteConfig.toc.enable && !shouldUseSidebarToc
             </div>
         </div>}
 
-        <!-- #toc needs to exist for Swup to work normally -->
+        <!-- Keep #toc available for layout scripts on pages without a visible TOC -->
         {!shouldShowRightToc && !shouldUseSidebarToc && <div id="toc"></div>}
     </div>
 </div>

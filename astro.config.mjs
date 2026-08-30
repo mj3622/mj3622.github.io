@@ -1,10 +1,12 @@
+import { unified } from '@astrojs/markdown-remark'
 import sitemap from '@astrojs/sitemap'
 import svelte from '@astrojs/svelte'
-import tailwind from '@astrojs/tailwind'
-import swup from '@swup/astro'
-import Compress from 'astro-compress'
-import icon from 'astro-icon'
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections'
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
+import expressiveCode from 'astro-expressive-code'
+import icon from 'astro-icon'
 import Color from 'colorjs.io'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypeComponents from 'rehype-components' /* Render the custom directive content */
@@ -14,12 +16,14 @@ import remarkDirective from 'remark-directive' /* Handle directives */
 import remarkGfm from 'remark-gfm'
 import remarkGithubAdmonitionsToDirectives from 'remark-github-admonitions-to-directives'
 import remarkMath from 'remark-math'
+import { expressiveCodeConfig } from './src/config.ts'
 import { AdmonitionComponent } from './src/plugins/rehype-component-admonition.mjs'
-import { rehypeWrapTables } from './src/plugins/rehype-wrap-tables.mjs'
 import { GithubCardComponent } from './src/plugins/rehype-component-github-card.mjs'
+import { rehypeWrapTables } from './src/plugins/rehype-wrap-tables.mjs'
+import { remarkDemotePostHeadings } from './src/plugins/remark-demote-post-headings.mjs'
 import { parseDirectiveNode } from './src/plugins/remark-directive-rehype.js'
-import { remarkNormalizeCodeLang } from './src/plugins/remark-normalize-code-lang.mjs'
 import { remarkExcerpt } from './src/plugins/remark-excerpt.js'
+import { remarkNormalizeCodeLang } from './src/plugins/remark-normalize-code-lang.mjs'
 import { remarkReadingTime } from './src/plugins/remark-reading-time.mjs'
 
 const oklchToHex = str => {
@@ -37,22 +41,10 @@ export default defineConfig({
   site: 'https://mj3622.github.io',
   base: '/',
   trailingSlash: 'always',
+  image: {
+    layout: 'constrained',
+  },
   integrations: [
-    tailwind(),
-    swup({
-      theme: false,
-      animationClass: 'transition-swup-',   // see https://swup.js.org/options/#animationselector
-                                            // the default value `transition-` cause transition delay
-                                            // when the Tailwind class `transition-all` is used
-      containers: ['main', '#sidebar'],
-      smoothScrolling: true,
-      cache: true,
-      preload: true,
-      accessibility: true,
-      updateHead: true,
-      updateBodyClass: false,
-      globalInstance: true,
-    }),
     icon({
       include: {
         'material-symbols': ['*'],
@@ -61,70 +53,104 @@ export default defineConfig({
         'fa6-solid': ['*'],
       },
     }),
-    svelte(),
-    sitemap(),
-    Compress({
-      CSS: false,
-      Image: false,
-      Action: {
-        Passed: async () => true, // https://github.com/PlayForm/Compress/issues/376
+    expressiveCode({
+      themes: [expressiveCodeConfig.theme, expressiveCodeConfig.theme],
+      plugins: [pluginCollapsibleSections(), pluginLineNumbers()],
+      defaultProps: {
+        wrap: true,
+        overridesByLang: {
+          shellsession: {
+            showLineNumbers: false,
+          },
+        },
+      },
+      styleOverrides: {
+        codeBackground: 'var(--codeblock-bg)',
+        borderRadius: '0.75rem',
+        borderColor: 'none',
+        codeFontSize: '0.875rem',
+        codeFontFamily:
+          "'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+        codeLineHeight: '1.5rem',
+        frames: {
+          editorBackground: 'var(--codeblock-bg)',
+          terminalBackground: 'var(--codeblock-bg)',
+          terminalTitlebarBackground: 'var(--codeblock-topbar-bg)',
+          editorTabBarBackground: 'var(--codeblock-topbar-bg)',
+          editorActiveTabBackground: 'none',
+          editorActiveTabIndicatorBottomColor: 'var(--primary)',
+          editorActiveTabIndicatorTopColor: 'none',
+          editorTabBarBorderBottomColor: 'var(--codeblock-topbar-bg)',
+          terminalTitlebarBorderBottomColor: 'none',
+        },
+        textMarkers: {
+          delHue: 0,
+          insHue: 180,
+          markHue: 250,
+        },
       },
     }),
+    svelte(),
+    sitemap(),
   ],
   markdown: {
-    remarkPlugins: [
-      remarkMath,
-      remarkGfm,
-      remarkNormalizeCodeLang,
-      remarkReadingTime,
-      remarkExcerpt,
-      remarkGithubAdmonitionsToDirectives,
-      remarkDirective,
-      parseDirectiveNode,
-    ],
-    rehypePlugins: [
-      rehypeKatex,
-      rehypeSlug,
-      rehypeWrapTables(),
-      [
-        rehypeComponents,
-        {
-          components: {
-            github: GithubCardComponent,
-            note: (x, y) => AdmonitionComponent(x, y, 'note'),
-            tip: (x, y) => AdmonitionComponent(x, y, 'tip'),
-            important: (x, y) => AdmonitionComponent(x, y, 'important'),
-            caution: (x, y) => AdmonitionComponent(x, y, 'caution'),
-            warning: (x, y) => AdmonitionComponent(x, y, 'warning'),
-          },
-        },
+    processor: unified({
+      remarkPlugins: [
+        remarkMath,
+        remarkGfm,
+        remarkDemotePostHeadings,
+        remarkNormalizeCodeLang,
+        remarkReadingTime,
+        remarkExcerpt,
+        remarkGithubAdmonitionsToDirectives,
+        remarkDirective,
+        parseDirectiveNode,
       ],
-      [
-        rehypeAutolinkHeadings,
-        {
-          behavior: 'append',
-          properties: {
-            className: ['anchor'],
-          },
-          content: {
-            type: 'element',
-            tagName: 'span',
-            properties: {
-              className: ['anchor-icon'],
-              'data-pagefind-ignore': true,
+      rehypePlugins: [
+        rehypeKatex,
+        rehypeSlug,
+        rehypeWrapTables(),
+        [
+          rehypeComponents,
+          {
+            components: {
+              github: GithubCardComponent,
+              note: (x, y) => AdmonitionComponent(x, y, 'note'),
+              tip: (x, y) => AdmonitionComponent(x, y, 'tip'),
+              important: (x, y) => AdmonitionComponent(x, y, 'important'),
+              caution: (x, y) => AdmonitionComponent(x, y, 'caution'),
+              warning: (x, y) => AdmonitionComponent(x, y, 'warning'),
             },
-            children: [
-              {
-                type: 'text',
-                value: '#',
-              },
-            ],
           },
-        },
+        ],
+        [
+          rehypeAutolinkHeadings,
+          {
+            behavior: 'append',
+            properties: {
+              className: ['anchor'],
+            },
+            content: {
+              type: 'element',
+              tagName: 'span',
+              properties: {
+                className: ['anchor-icon'],
+                'data-pagefind-ignore': true,
+              },
+              children: [
+                {
+                  type: 'text',
+                  value: '#',
+                },
+              ],
+            },
+          },
+        ],
       ],
-    ],
+    }),
   },
   vite: {
+    plugins: [tailwindcss()],
     build: {
       rollupOptions: {
         onwarn(warning, warn) {

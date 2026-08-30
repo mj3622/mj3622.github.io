@@ -1,0 +1,50 @@
+---
+import I18nKey from '@i18n/i18nKey'
+import { i18n } from '@i18n/translation'
+import type { SeriesContext } from '@utils/content-utils'
+import { getPostUrlBySlug } from '@utils/url-utils'
+import { Icon } from 'astro-icon/components'
+
+interface Props {
+  context: SeriesContext
+}
+
+const { context } = Astro.props
+const progress = `${Math.round((context.position / context.total) * 100)}%`
+---
+
+<section class="card-base p-5 mb-4" aria-labelledby="series-heading">
+    <div class="flex items-center justify-between gap-4 mb-3">
+        <div>
+            <div id="series-heading" class="font-bold text-lg text-90">{i18n(I18nKey.series)}：{context.name}</div>
+            <div class="text-sm text-50 mt-1">{context.position} / {context.total}</div>
+        </div>
+        <Icon name="material-symbols:library-books-outline-rounded" class="text-3xl text-[var(--primary)]" />
+    </div>
+
+    <div class="h-1.5 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden mb-4" aria-hidden="true">
+        <div class="h-full rounded-full bg-[var(--primary)]" style={`width: ${progress}`}></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {context.previous ? (
+            <a href={getPostUrlBySlug(context.previous.id)} class="btn-regular rounded-xl px-4 py-3 justify-start text-left">
+                <Icon name="material-symbols:chevron-left-rounded" class="text-2xl shrink-0" />
+                <span class="min-w-0">
+                    <span class="block text-xs text-50 mb-1">{i18n(I18nKey.previousInSeries)}</span>
+                    <span class="block font-medium truncate">{context.previous.data.title}</span>
+                </span>
+            </a>
+        ) : <div></div>}
+
+        {context.next ? (
+            <a href={getPostUrlBySlug(context.next.id)} class="btn-regular rounded-xl px-4 py-3 justify-end text-right">
+                <span class="min-w-0">
+                    <span class="block text-xs text-50 mb-1">{i18n(I18nKey.nextInSeries)}</span>
+                    <span class="block font-medium truncate">{context.next.data.title}</span>
+                </span>
+                <Icon name="material-symbols:chevron-right-rounded" class="text-2xl shrink-0" />
+            </a>
+        ) : <div></div>}
+    </div>
+</section>

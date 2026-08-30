@@ -49,6 +49,11 @@ export function remarkNormalizeCodeLang() {
     'c#': 'csharp',
     fs: 'fsharp',
     'f#': 'fsharp',
+    vbnet: 'vb',
+
+    // Unsupported by the current Shiki bundle
+    velocity: 'plaintext',
+    promql: 'plaintext',
   }
 
   return tree => {
