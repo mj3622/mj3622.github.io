@@ -46,7 +46,7 @@ export default defineConfig({
   ],
   webServer: {
     command: process.env.CI
-      ? 'pnpm exec vite preview --host 127.0.0.1 --port 4322'
+      ? 'pnpm exec astro preview --host 127.0.0.1 --port 4322'
       : 'pnpm build && pnpm exec vite preview --host 127.0.0.1 --port 4322',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
