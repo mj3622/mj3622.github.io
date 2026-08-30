@@ -1,7 +1,7 @@
 ---
 title: Spring Boot 实现接口数据脱敏处理
 published: 2026-06-08
-description: 本文介绍如何在 Spring Boot 中结合 Jackson 自定义序列化器和注解实现接口响应数据脱敏，并支持按字段权限决定输出明文或脱敏值。
+description: 介绍在 Spring Boot 中结合 Jackson 序列化器与注解实现响应数据脱敏，并按字段权限决定输出明文或脱敏值
 tags: ["Spring Boot", "Jackson", "数据脱敏", "Java"]
 category: 编程实践
 draft: false

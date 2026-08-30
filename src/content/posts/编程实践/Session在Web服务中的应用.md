@@ -1,7 +1,7 @@
 ---
 title: Session在Web服务中的应用
 published: 2024-12-14
-description: 本文将以Spring Boot作为后端，介绍Session在Web服务中的使用与注意事项
+description: 介绍 Spring Boot Web 服务中 Session 的基本使用与注意事项
 tags: [Web, Spring Boot, 会话管理]
 category: 编程实践
 draft: false

@@ -1,7 +1,7 @@
 ---
 title: "从 WebSocket 到 Spring STOMP：实时通信、连接管理与消息顺序实践"
 published: 2026-07-18
-description: "从 WebSocket 握手、连接鉴权到 Spring STOMP 路由，梳理实时通信中连接管理、并发发送、背压与端到端消息顺序的工程实践。"
+description: "从 WebSocket 握手、连接鉴权到 Spring STOMP 路由，梳理实时通信中连接管理、并发发送、背压与端到端消息顺序的工程实践"
 tags: [Java, Spring Boot, WebSocket, STOMP]
 category: 编程实践
 draft: false
@@ -13,7 +13,7 @@ draft: false
 
 但在生产环境中，建立连接只是开始。连接如何鉴权、用户与连接如何关联、多个线程如何安全发送、慢客户端如何处理、消息顺序如何定义，才是实时通信最容易出问题的部分。
 
-本文以 Servlet 栈上的 Spring 应用为背景，按从底层到上层的顺序介绍：
+下面以 Servlet 栈的 Spring 应用为例，依次讨论：
 
 1. WebSocket 的握手与适用边界；
 2. JSR 356、Spring WebSocket 与 STOMP 的职责差异；

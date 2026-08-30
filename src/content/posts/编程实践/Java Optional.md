@@ -1,7 +1,7 @@
 ---
-title: Java Optional 全面指南：告别空指针，写出优雅代码
+title: Java Optional 使用指南
 published: 2025-11-22
-description: 本文将介绍 Java Optional 的全面指南，帮助读者告别空指针，写出优雅代码
+description: 介绍 Java Optional 的创建、转换、过滤和取值方法，以及常见误区
 tags: [Java]
 category: 编程实践
 draft: false
@@ -11,7 +11,7 @@ draft: false
 
 在 Java 开发中，`NullPointerException` (NPE) 无疑是最令人头疼的异常之一。Tony Hoare 曾将空引用称为“十亿美元的错误”。为了解决这个问题，Java 8 引入了 `java.util.Optional` 类。
 
-`Optional` 不是为了完全消除 `null`，而是为了**清晰地表达“值可能不存在”这一语义**，并提供一套函数式 API 来优雅地处理空值，从而减少防御性代码（`if (obj != null)`）的滥用。
+`Optional` 用来明确表达“值可能不存在”，并提供 `map`、`filter`、`orElse` 等 API 处理空值，减少层层嵌套的 `null` 判断。
 
 ---
 
@@ -189,7 +189,7 @@ List<User> users = list.stream()
 
 ---
 
-# 6. 最佳实践总结
+# 6. 使用建议
 
 1. **作为返回值**：`Optional` 设计的初衷是作为方法的**返回值类型**，明确告知调用者“这里可能没有值”。
 2. **避免作为字段或参数**：
@@ -200,6 +200,4 @@ List<User> users = list.stream()
 3. **集合不要用 Optional**：不要返回 `Optional<List<T>>`，直接返回空集合 `Collections.emptyList()` 更好。
 4. **基本类型专用类**：如果是 `int`、`long`、`double`，尽量使用 `OptionalInt`、`OptionalLong`、`OptionalDouble`，避免自动装箱/拆箱的性能损耗。
 
-# 结语
-
-`Optional` 不仅仅是一个工具类，更是一种编程思维。它强制开发者在编码阶段就思考“值为空”的场景，并通过链式调用让业务逻辑更加流畅。掌握 `Optional`，是写出健壮、简洁 Java 代码的必经之路。
+`Optional` 适合出现在可能没有结果的方法返回值中。字段、参数和集合通常有更直接的表达方式，链式调用也不应替代清晰的条件判断。

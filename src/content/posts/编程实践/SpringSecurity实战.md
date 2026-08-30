@@ -1,13 +1,13 @@
 ---
 title: Spring Security结合JWT实现用户登录与动态权限
 published: 2025-07-21
-description: 由于Spring Security可配置内容较为复杂，初学者直接上手使用可能会感觉无从下手。本文将直接从快速应用的角度出发，介绍如何使用Spring Security结合JWT实现用户登录与基于URL的动态权限管理，快速搭建一个可用的登录授权系统。
+description: 介绍 Spring Security 与 JWT 的登录认证方案，以及基于 URL 的动态权限管理
 tags: [Spring, 安全认证, JWT]
 category: 编程实践
 draft: false
 ---
 
-本文使用到的依赖/软件版本如下
+示例使用以下依赖和软件版本
 
 | 名称                           | 版本   |
 | ------------------------------ | ------ |
@@ -505,7 +505,7 @@ public Result<Authentication> getUserInfo() {
 
 ## 7.2 GUEST权限用户
 
-利用Apifox，登录`John`账号。可以看到登录成功，然后将返回的`jwt`放置在后续的请求头中
+使用 Apifox 登录 `John` 账号，登录成功后将返回的 `jwt` 放入后续请求头
 
 ![image-20250722115824665](./assets/image-20250722115824665.png)
 
@@ -525,7 +525,7 @@ public Result<Authentication> getUserInfo() {
 
 ## 7.3 ADMIN权限用户
 
-登录`admin`账号。可以看到登录成功，然后将返回的`jwt`放置在后续的请求头中
+登录 `admin` 账号后，将返回的 `jwt` 放入后续请求头
 
 ![image-20250722120846237](./assets/image-20250722120846237.png)
 
@@ -539,6 +539,6 @@ public Result<Authentication> getUserInfo() {
 
 # 源码
 
-本文章配套源码已部署至`github`，可按需下载查看
+配套源码保存在 GitHub 仓库中
 
 ::github{repo="mj3622/spring-security-demo"}

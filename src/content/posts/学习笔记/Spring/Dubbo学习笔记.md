@@ -1,7 +1,7 @@
 ---
 title: Dubbo 2.6.x 学习笔记：从一次 RPC 调用到故障定位
 published: 2026-07-19
-description: 以 Dubbo 2.6.x 为基准，从 XML 与注解配置、服务暴露和发现出发，逐步理解调用链、治理参数、No Provider 与网络故障排查。
+description: 记录 Dubbo 2.6.x 的配置、服务暴露与发现、调用链、治理参数及常见故障排查
 tags: [Java, Dubbo, RPC, 微服务]
 category: 学习笔记
 draft: false
@@ -9,9 +9,9 @@ draft: false
 
 Dubbo 最容易被理解成“像调用本地方法一样调用远程服务”的工具，但如果只停留在注解怎么写、XML 怎么配，遇到 `No provider available`、调用超时或者“注册中心明明有地址却连不上”时，仍然很难判断问题出在哪里。
 
-这篇笔记以 **Dubbo 2.6.x** 的经典架构为基准，沿着一条由浅入深的主线展开：先让一对 Provider 和 Consumer 跑起来，再追踪 Provider 如何监听和注册、Consumer 如何订阅和直连，随后把配置规则、No Provider 故障、源码调用链和网络排障串成一套完整认知。
+内容以 **Dubbo 2.6.x** 的经典架构为基准。先跑通一对 Provider 和 Consumer，再追踪服务监听、注册、订阅与直连，最后整理配置规则、常见故障、源码调用链和网络排查方法。
 
-> Dubbo 2.6.x 已停止维护，实际生产环境应评估升级。本文选择它，是为了理解仍然广泛存在于旧项目中的 `com.alibaba.dubbo.*` 包名、接口级服务发现、Dubbo 协议和 Spring XML 配置。示例与源码类名按 2.6.x 编写，并以 2.6.12 源码进行核对；不同补丁版本存在细节差异时，应以项目实际依赖为准。
+> Dubbo 2.6.x 已停止维护，实际生产环境应评估升级。这里仍以它为例，是因为不少旧项目还在使用 `com.alibaba.dubbo.*` 包名、接口级服务发现、Dubbo 协议和 Spring XML 配置。示例与源码类名按 2.6.x 编写，并以 2.6.12 源码核对；不同补丁版本存在细节差异时，以项目实际依赖为准。
 
 ## 一、先从一次远程方法调用说起
 
@@ -567,7 +567,7 @@ Provider 与 Consumer 的值必须一致。注册中心中“存在同名接口�
 - 不要直接传输数据库实体、巨大对象、文件或层级过深的对象图。
 - Dubbo 协议适合小数据量、高并发 RPC，不适合直接传输大文件或超大字符串。
 
-本文基于 2.6.x，因此不引入 Triple、Protobuf、Fastjson2 自动协商或 `prefer-serialization` 等 Dubbo 3 能力。
+这里讨论的是 2.6.x，不涉及 Triple、Protobuf、Fastjson2 自动协商或 `prefer-serialization` 等 Dubbo 3 能力。
 
 ## 五、从配置错误走进 No Provider 故障
 

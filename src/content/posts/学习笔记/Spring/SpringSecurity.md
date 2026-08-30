@@ -1,7 +1,7 @@
 ---
 title: Spring Security快速上手
 published: 2025-05-20
-description: 由于Spring Security可配置内容较为复杂，初学者直接上手使用可能会感觉无从下手。本文将直接从快速应用的角度出发，介绍如何使用Spring Security的基本功能
+description: 从快速上手的角度整理 Spring Security 的基本配置与常用功能
 image: ./assets/cover.png
 tags: [Spring, 安全认证]
 category: 学习笔记
@@ -12,7 +12,7 @@ draft: true
 
 [Spring Security](https://spring.io/projects/spring-security) 是一个功能强大且高度可定制的 **安全框架** ，用于为基于 Java 的企业级应用程序提供身份认证（Authentication）、授权（Authorization）以及防护常见的 Web 安全威胁的功能。
 
-它是 Spring 框架的一部分，可以无缝集成到 Spring 应用中，比如 Spring Boot、Spring MVC 等项目中。同时它也支持非 Spring 项目（如原生的 Servlet 应用）。
+它是 Spring 生态的一部分，可以直接集成到 Spring Boot、Spring MVC 等项目中，也支持原生 Servlet 应用等非 Spring 项目。
 
 
 
@@ -72,7 +72,7 @@ draft: true
 
 ## 1.4 引入依赖
 
-本文将基于`Spring Boot`进行介绍，因此只需引入启动类依赖即可
+下面以 `Spring Boot` 为例，只需引入 Starter 依赖即可
 
 ```xml
 <dependency>

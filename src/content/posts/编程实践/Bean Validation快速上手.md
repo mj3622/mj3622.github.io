@@ -1,7 +1,7 @@
 ---
 title: Java Bean Validation快速上手
 published: 2025-05-05
-description: Java Bean Validation 是一种用于验证 Java Bean 属性的标准化规范，旨在通过声明式注解简化数据验证逻辑。本文将介绍对其概念和使用进行简单介绍，帮助使用者快速上手。
+description: 介绍 Java Bean Validation 的核心概念、常用注解和基本用法
 tags: [Java, 数据验证, Spring]
 category: 编程实践
 draft: false

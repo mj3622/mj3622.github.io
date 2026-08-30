@@ -1,7 +1,7 @@
 ---
 title: Java在刷题过程中的经验总结
 published: 2024-12-11
-description: 本文总结了在使用Java刷题过程中的一些经验，包括ACM模式下的输入输出，常用的辅助工具类等内容
+description: 整理 Java 刷题中的常用写法，包括 ACM 模式输入输出和辅助工具类
 tags: [Java, 算法, 面试]
 category: 经验分享
 draft: false

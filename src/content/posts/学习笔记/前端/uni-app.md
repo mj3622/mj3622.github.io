@@ -1,7 +1,7 @@
 ---
 title: uni-app快速上手
 published: 2024-12-29
-description: 在本文将记录如何从0开始，学会使用uni-app的基本用法，并最终结合项目需求完成一些简单任务。
+description: 记录从零学习 uni-app 的基础用法，以及在实际项目中的简单应用
 tags: [uni-app, 前端开发, Vue]
 category: 学习笔记
 draft: false
@@ -1367,7 +1367,7 @@ Vue 3 中的生命周期指组件从创建到销毁的完整过程，包括初�
 
 
 
-以下是一个组件示例，展示了常用的生命周期钩子函数：
+下面的组件示例包含几个常用的生命周期钩子：
 
 ```vue
 <template>

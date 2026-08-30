@@ -1,7 +1,7 @@
 ---
 title: Regex 入门指南：如何在 Java 中优雅地处理字符串
 published: 2025-08-25
-description: 本文介绍了正则表达式（Regex）的基本概念和语法，重点讲解了如何在 Java 中使用 Regex 进行字符串匹配、提取和替换操作。
+description: 整理正则表达式的基本概念和语法，以及在 Java 中进行匹配、提取和替换的常用写法
 tags: [Java, 正则表达式]
 category: 编程实践
 draft: false
@@ -155,7 +155,7 @@ public class ReplaceDemo {
 
 如果你在一个**循环**中频繁调用 `String.matches(...)` 或 `Pattern.compile(...)`，性能会非常差，因为每次调用都会重新编译正则表达式。
 
-**最佳实践：**
+**使用建议：**
 将 `Pattern` 定义为 `static final` 常量，只编译一次，重复使用。
 
 ```java
@@ -172,8 +172,6 @@ public class UserValidator {
 
 ```
 
-## 结语
+## 调试正则
 
-正则表达式虽然入门时有些晦涩，但它是程序员工具箱里不可或缺的神器。从简单的表单验证到复杂的爬虫解析，Regex 都能助你一臂之力。
-
-建议使用在线工具（如 [Regex101](https://regex101.com/)）来编写和测试你的正则，然后再将其放入 Java 代码中。
+复杂正则可以先在 [Regex101](https://regex101.com/) 中测试，并为边界输入补充单元测试。表达式过长或需要解析嵌套结构时，普通字符串处理或专用解析器通常更容易维护。

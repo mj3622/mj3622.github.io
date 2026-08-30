@@ -1,7 +1,7 @@
 ---
 title: Git自动化提交脚本指南
 published: 2025-04-23
-description: 在日常开发中，我们常常需要反复执行git add、commit、push这一系列操作。本文将介绍两个开箱即用的自动化脚本，助你告别重复劳动，提升版本控制效率。
+description: 记录两个自动执行 git add、commit 和 push 的脚本，减少日常重复操作
 tags: [Git, 自动化, 脚本]
 category: 经验分享
 draft: false

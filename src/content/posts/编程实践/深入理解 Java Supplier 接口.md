@@ -1,7 +1,7 @@
 ---
-title: 深入理解 Java Supplier 接口：函数式编程的懒加载利器
+title: Java Supplier 接口与懒加载
 published: 2025-12-15
-description: 本文深入探讨 Java 中的 Supplier 接口，解析其定义、用法及在函数式编程中的重要作用，特别是懒加载（Lazy Evaluation）的实现。
+description: 介绍 Java Supplier 接口的定义、常见用法，以及它在懒加载中的应用
 tags: ["Java", "Supplier"]
 category: 编程实践
 draft: false
@@ -63,7 +63,7 @@ System.out.println(sb.toString());
 
 ```
 
-# Supplier 的核心价值：懒加载（Lazy Evaluation）
+# Supplier 与懒加载（Lazy Evaluation）
 
 如果你只是单纯用 `Supplier` 来封装一个对象的创建，可能感觉不到它的强大。`Supplier` 真正的威力在于**延迟执行**。
 
@@ -189,8 +189,6 @@ int result = intSup.getAsInt(); // 无需拆箱，性能更好
 
 # 总结
 
-`Supplier` 接口虽然结构简单，但在 Java 函数式编程中扮演着至关重要的角色。
+`Supplier` 接口结构简单，适合把“何时创建或获取值”的决定推迟到真正需要结果的地方。
 
-1. **定义**：它不接受参数，返回一个结果。
-2. **核心优势**：它是实现**懒加载**（Lazy Evaluation）的标准方式，能够推迟高开销操作的执行，直到真正需要结果的那一刻。
-3. **最佳实践**：在设计工具类、配置类或需要性能优化的条件判断逻辑时，优先考虑使用 `Supplier` 来替代直接的对象传递。
+`Supplier` 不接受参数，只在调用 `get()` 时返回结果。它适合延迟创建成本较高的对象，或把取值逻辑作为参数传递；如果值已经存在，直接传递对象通常更清楚。

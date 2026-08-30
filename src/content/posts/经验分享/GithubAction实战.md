@@ -1,15 +1,15 @@
 ---
 published: 2026-01-22
-title: GitHub Actions 实战：从零搭建 CI/CD 流水线
-description: 本文详细介绍了如何使用 GitHub Actions 实现代码自动部署到 Linux 服务器的 CI/CD 流水线，涵盖 SSH 密钥配置、Workflow 编写及前后端项目的实战案例。
+title: 用 GitHub Actions 搭建 CI/CD 流水线
+description: 记录使用 GitHub Actions 向 Linux 服务器自动部署代码的流程，包括 SSH 密钥、Workflow 和前后端项目配置
 tags: [DevOps, GitHub Actions, CI-CD]
 category: 经验分享
 draft: false
 ---
 
-在现代开发流程中，CI/CD（持续集成/持续部署）已经成为提高效率的关键环节。本文将介绍如何利用 GitHub Actions，在代码推送到 GitHub 仓库时，自动将其部署到你的 Linux 服务器上。
+下面使用 GitHub Actions，在代码推送到 GitHub 仓库后自动部署到 Linux 服务器。
 
-我们将使用目前社区最流行的 `appleboy/ssh-action` 方案，因为它配置简单且足够安全。
+示例使用 `appleboy/ssh-action` 通过 SSH 执行部署命令，配置较少，也方便放入现有 Workflow。
 
 ## 1. 原理简介
 

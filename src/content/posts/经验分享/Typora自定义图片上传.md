@@ -1,14 +1,14 @@
 ---
 title: Typora自定义图片上传
 published: 2024-07-11
-description: 本文将介绍如何配置Typora以使用自定义服务进行图片上传
+description: 记录 Typora 接入自定义图片上传服务的配置方法
 tags: [Typora, 图床, 工具]
 category: 经验分享
 draft: false
 ---
 # 1. 图床服务准备
 
-在本文介绍中，将以`PicHub`作为图床服务，这是一个开源的图床服务，依托于Github提供的资源实现。其他第三方服务，例如阿里云OSS，华为云OBS也可以达到同样的效果，可根据实际情况进行选择
+下面以开源项目 `PicHub` 作为图床服务。阿里云 OSS、华为云 OBS 等对象存储也可以按同样思路接入
 
 
 
@@ -22,7 +22,7 @@ draft: false
 
 > [Typora图片上传文档](https://support.typora.io/Upload-Image/#custom)
 
-查阅官方文档，我们可以看到Typora对图片上传的要求如下
+Typora 对自定义图片上传程序的输入和输出有以下要求
 
 
 

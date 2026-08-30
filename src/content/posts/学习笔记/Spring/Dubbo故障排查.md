@@ -1,7 +1,7 @@
 ---
 title: Dubbo 故障排查
 published: 2026-07-26
-description: 结合 Dubbo Demo 的真实日志，记录三个调用故障的排查过程。
+description: 结合 Dubbo Demo 的真实日志，记录三个调用故障的排查过程
 tags: [Java, Dubbo, RPC, 故障排查]
 category: 学习笔记
 draft: false

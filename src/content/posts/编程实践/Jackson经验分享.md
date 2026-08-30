@@ -1,7 +1,7 @@
 ---
 title: Jackson 入门：从 ObjectMapper 到特殊类型处理
 published: 2026-04-09
-description: 本文介绍 Java 后端开发中常用 JSON 库 Jackson 的核心用法，包括 ObjectMapper、常用注解、枚举类处理、日期时间处理、泛型反序列化、自定义序列化器以及 Spring Boot 中的全局配置实践。
+description: 整理 Jackson 的常用写法，包括 ObjectMapper、注解、枚举与时间处理、泛型反序列化、自定义序列化和 Spring Boot 全局配置
 tags: [Java, Jackson, JSON, Spring Boot]
 category: 编程实践
 draft: false
@@ -744,7 +744,7 @@ private String departmentName;
 
 这些字段通常更适合放在数据库字典表中维护，而不是写死在枚举类里。
 
-简单来说：
+可以按数据的稳定程度和使用方式选择：
 
 - 固定业务状态：适合枚举；
 - 变化频繁的数据字典：适合数据库表；
@@ -872,7 +872,7 @@ Map<String, List<UserDTO>> userMap = objectMapper.readValue(
 );
 ```
 
-简单来说，只要目标类型中包含泛型，就优先考虑使用 `TypeReference`。
+目标类型包含泛型时，优先使用 `TypeReference` 保留完整类型信息。
 
 ---
 
@@ -1252,7 +1252,7 @@ Jackson 是 Java 后端开发中非常重要的 JSON 处理工具。
 6. 使用 `JsonSerializer` 实现自定义序列化；
 7. 在 Spring Boot 中尽量使用框架统一管理的 `ObjectMapper`。
 
-如果只是简单接口开发，Jackson 基本是“开箱即用”的。
+对于普通接口开发，Jackson 的默认配置通常已经够用。
 
 但一旦遇到字段脱敏、权限控制、枚举转换、日期格式统一、复杂 JSON 解析等场景，就需要真正理解 Jackson 的序列化和反序列化机制。
 

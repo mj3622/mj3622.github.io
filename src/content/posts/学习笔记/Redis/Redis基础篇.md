@@ -1,7 +1,7 @@
 ---
 title: Redis基础篇
 published: 2024-12-12
-description: 本文为Redis基础内容相关的学习笔记，包括入门介绍、常用命令和在Java中的使用等内容
+description: Redis 基础学习笔记，涵盖常用命令和 Java 客户端的基本使用
 image: ./assets/cover.png
 tags: [Redis, 缓存, 数据库]
 category: 学习笔记
@@ -530,7 +530,7 @@ Redis 对键的命名没有严格的规则，但为了方便管理和性能优�
 | **Jedis**             | 简单易用，支持 Redis 大部分功能，连接池      | 简单易用，适合大多数场景，支持常见数据类型 | 单线程，异步支持差，可能在高并发场景下性能差 | 小型应用，简单的 Redis 操作       |
 | **Lettuce**           | 基于 Netty，支持异步、反应式编程，非阻塞 I/O | 高并发、高性能，支持异步和反应式编程       | API 较复杂，学习成本高                       | 高并发应用，需要异步操作的场景    |
 | **Redisson**          | 提供分布式锁、分布式集合，支持同步/异步      | 提供高级功能，支持 Redis 集群、主从模式    | 学习成本高，复杂性较高                       | 分布式应用，需要高级 Redis 功能   |
-| **Spring Data Redis** | 与 Spring 集成，提供 RedisTemplate           | 与 Spring Boot 无缝集成，简化 Redis 操作   | 适用于 Spring 环境，增加复杂度               | Spring/Spring Boot 应用，自动配置 |
+| **Spring Data Redis** | 与 Spring 集成，提供 RedisTemplate           | 支持 Spring Boot 自动配置，简化 Redis 操作 | 适用于 Spring 环境，增加复杂度               | Spring/Spring Boot 应用，自动配置 |
 
 
 

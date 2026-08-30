@@ -1,7 +1,7 @@
 ---
 title: Feign快速上手
 published: 2025-08-03
-description: Feign 是一个声明式的 HTTP 客户端，由 Netflix 开发，后被 Spring Cloud 集成。简单来说，它能让你像调用本地方法一样去调用远程的 HTTP 服务。
+description: Feign 声明式 HTTP 客户端的基本用法，以及它在 Spring Cloud 中的常见配置
 tags: [Spring, 微服务, HTTP客户端]
 category: 学习笔记
 draft: false
