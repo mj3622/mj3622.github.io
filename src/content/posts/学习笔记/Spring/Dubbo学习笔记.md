@@ -1,7 +1,7 @@
 ---
 title: Dubbo 2.6.x 学习笔记：从一次 RPC 调用到故障定位
 published: 2026-07-19
-description: 记录 Dubbo 2.6.x 的配置、服务暴露与发现、调用链、治理参数及常见故障排查
+description: 以 Dubbo 2.6.x 为基准，从 XML 与注解配置、服务暴露和发现出发，逐步理解调用链、治理参数、No Provider 与网络故障排查。
 tags: [Java, Dubbo, RPC, 微服务]
 category: 学习笔记
 draft: false
@@ -9,9 +9,9 @@ draft: false
 
 Dubbo 最容易被理解成“像调用本地方法一样调用远程服务”的工具，但如果只停留在注解怎么写、XML 怎么配，遇到 `No provider available`、调用超时或者“注册中心明明有地址却连不上”时，仍然很难判断问题出在哪里。
 
-内容以 **Dubbo 2.6.x** 的经典架构为基准。先跑通一对 Provider 和 Consumer，再追踪服务监听、注册、订阅与直连，最后整理配置规则、常见故障、源码调用链和网络排查方法。
+这篇笔记以 **Dubbo 2.6.x** 的经典架构为基准，沿着一条由浅入深的主线展开：先让一对 Provider 和 Consumer 跑起来，再追踪 Provider 如何监听和注册、Consumer 如何订阅和直连，随后把配置规则、No Provider 故障、源码调用链和网络排障串成一套完整认知。
 
-> Dubbo 2.6.x 已停止维护，实际生产环境应评估升级。这里仍以它为例，是因为不少旧项目还在使用 `com.alibaba.dubbo.*` 包名、接口级服务发现、Dubbo 协议和 Spring XML 配置。示例与源码类名按 2.6.x 编写，并以 2.6.12 源码核对；不同补丁版本存在细节差异时，以项目实际依赖为准。
+> Dubbo 2.6.x 已停止维护，实际生产环境应评估升级。本文选择它，是为了理解仍然广泛存在于旧项目中的 `com.alibaba.dubbo.*` 包名、接口级服务发现、Dubbo 协议和 Spring XML 配置。示例与源码类名按 2.6.x 编写，并以 2.6.12 源码进行核对；不同补丁版本存在细节差异时，应以项目实际依赖为准。
 
 ## 一、先从一次远程方法调用说起
 
@@ -147,20 +147,35 @@ Provider 的 `dubbo-provider.xml`：
 
 2.6.x 同时兼容旧的 `http://code.alibabatech.com/schema/dubbo` 命名空间；这里使用 2.6.12 源码示例采用的 Apache 命名空间。不要混用两套命名空间和 XSD 地址。
 
-可以使用 Spring 容器启动 Provider：
+本文默认 Provider 和 Consumer 都运行在已有的 Spring Web 容器中。Provider Web 应用可以在根 Spring 配置 `applicationContext.xml` 中导入 Dubbo 配置：
 
-```java
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-public class ProviderApplication {
-    public static void main(String[] args) throws Exception {
-        ClassPathXmlApplicationContext context =
-                new ClassPathXmlApplicationContext("dubbo-provider.xml");
-        context.start();
-        System.in.read();
-    }
-}
+    <import resource="classpath:dubbo-provider.xml"/>
+</beans>
 ```
+
+传统 Spring Web 项目通常已经通过 `web.xml` 创建根容器；如果尚未配置，核心内容如下：
+
+```xml
+<context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:applicationContext.xml</param-value>
+</context-param>
+
+<listener>
+    <listener-class>
+        org.springframework.web.context.ContextLoaderListener
+    </listener-class>
+</listener>
+```
+
+Tomcat 启动 Web 应用时，`ContextLoaderListener` 会创建根 `ApplicationContext`，随后通过 `<import>` 加载 `dubbo-provider.xml`。Dubbo 服务的暴露和销毁因此与 Web 应用生命周期保持一致，不需要额外编写 Dubbo 启动代码。
 
 这里的四项配置分别回答了四个问题：
 
@@ -193,26 +208,38 @@ Consumer 的 `dubbo-consumer.xml`：
 </beans>
 ```
 
-`<dubbo:reference>` 创建的是一个实现了 `GreetingService` 的远程代理，它也是 Spring Bean：
+Consumer Web 应用同样在自己的根配置 `applicationContext.xml` 中导入：
+
+```xml
+<import resource="classpath:dubbo-consumer.xml"/>
+```
+
+`<dubbo:reference>` 创建的是一个实现了 `GreetingService` 的远程代理，同时也是 Spring Bean，可以直接注入 Controller 或其他业务 Bean：
 
 ```java
+package com.example.consumer;
+
 import com.example.api.GreetingService;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-public class ConsumerApplication {
-    public static void main(String[] args) {
-        ClassPathXmlApplicationContext context =
-                new ClassPathXmlApplicationContext("dubbo-consumer.xml");
-        context.start();
+@RestController
+public class GreetingController {
 
-        GreetingService greetingService =
-                context.getBean("greetingService", GreetingService.class);
-        System.out.println(greetingService.sayHello("Dubbo"));
+    @Autowired
+    private GreetingService greetingService;
+
+    @RequestMapping(value = "/greeting", method = RequestMethod.GET)
+    public String greeting(@RequestParam("name") String name) {
+        return greetingService.sayHello(name);
     }
 }
 ```
 
-此时业务代码调用的是代理。代理会把接口方法转换为 Dubbo 的 `Invocation`，再进入服务发现、路由、负载均衡和协议调用链。
+业务代码调用的仍然是代理。代理会把接口方法转换为 Dubbo 的 `Invocation`，再进入服务发现、路由、负载均衡和协议调用链。Dubbo 配置应复用项目已有的根 Spring 容器，不要为了加载它再创建第二个 `ApplicationContext`，否则容易造成 Bean 不互通、重复发布和生命周期不一致。
 
 ### 将同一个示例改成注解方式
 
@@ -567,7 +594,7 @@ Provider 与 Consumer 的值必须一致。注册中心中“存在同名接口�
 - 不要直接传输数据库实体、巨大对象、文件或层级过深的对象图。
 - Dubbo 协议适合小数据量、高并发 RPC，不适合直接传输大文件或超大字符串。
 
-这里讨论的是 2.6.x，不涉及 Triple、Protobuf、Fastjson2 自动协商或 `prefer-serialization` 等 Dubbo 3 能力。
+本文基于 2.6.x，因此不引入 Triple、Protobuf、Fastjson2 自动协商或 `prefer-serialization` 等 Dubbo 3 能力。
 
 ## 五、从配置错误走进 No Provider 故障
 
