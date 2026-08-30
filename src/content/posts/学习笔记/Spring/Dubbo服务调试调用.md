@@ -1,9 +1,12 @@
 ---
 title: 调试时，怎样直接调用 Dubbo 服务并查看返回值
 published: 2026-07-28
+updated: 2026-08-28
 description: 用临时 HTTP 入口、泛化调用和 Telnet 在 Dubbo 2.6.12 中直接调用服务，查看真实返回值。
 tags: [Java, Dubbo, RPC, 调试]
 category: 学习笔记
+series: Dubbo 2.6.x 学习
+seriesOrder: 3
 draft: false
 ---
 

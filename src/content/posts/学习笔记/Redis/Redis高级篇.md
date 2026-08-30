@@ -288,7 +288,7 @@ Redis 哨兵（**Sentinel**）是一个用于 Redis 集群高可用性（High Av
 
 一旦发现master故障，sentinel需要在salve中选择一个作为新的master，选择依据是这样的：
 
-1. 首先会判断slave节点与master节点断开时间长短，如果超过指定值$（down-after-milliseconds*10）$则会排除该slave节点
+1. 首先会判断 slave 节点与 master 节点断开时间长短，如果超过指定值（`down-after-milliseconds * 10`）则会排除该 slave 节点
 2. 然后判断slave节点的`slave-priority`值，越小优先级越高，如果是0则永不参与选举
 3. 如果`slave-prority`一样，则判断slave节点的`offset`值，越大说明数据越新，优先级越高
 4. 最后是判断slave节点的运行id大小，越小优先级越高

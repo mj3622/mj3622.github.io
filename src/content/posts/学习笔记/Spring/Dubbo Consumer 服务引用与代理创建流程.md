@@ -1,9 +1,12 @@
 ---
 title: Dubbo Consumer 服务引用与代理创建流程
 published: 2026-08-15
+updated: 2026-08-29
 description: 以 Dubbo 2.6.12 为基准，沿 ReferenceBean、ReferenceConfig、RegistryDirectory 和 ClusterInvoker 追踪 Consumer 如何完成服务引用并创建接口代理
 tags: [Java, Dubbo, RPC, 源码分析]
 category: 学习笔记
+series: Dubbo 2.6.x 学习
+seriesOrder: 2
 draft: false
 ---
 

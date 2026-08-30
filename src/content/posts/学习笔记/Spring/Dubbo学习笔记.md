@@ -1,9 +1,12 @@
 ---
 title: Dubbo 2.6.x 学习笔记：从一次 RPC 调用到故障定位
 published: 2026-07-19
+updated: 2026-08-30
 description: 以 Dubbo 2.6.x 为基准，从 XML 与注解配置、服务暴露和发现出发，逐步理解调用链、治理参数、No Provider 与网络故障排查。
 tags: [Java, Dubbo, RPC, 微服务]
 category: 学习笔记
+series: Dubbo 2.6.x 学习
+seriesOrder: 1
 draft: false
 ---
 

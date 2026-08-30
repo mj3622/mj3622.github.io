@@ -1,188 +1,111 @@
 ---
-title: Docker部署常用服务
+title: Docker 部署常用服务
 published: 2025-03-10
-description: 记录使用 Docker 快速部署常见服务的方法和配置
+description: 记录 Docker Engine 的安装方法，以及 Nginx、MySQL、Redis、RabbitMQ、Nacos 和 MinIO 的单机部署命令
 tags: [Docker, 容器化, 部署]
 category: 经验分享
 draft: false
 ---
 
-# 1. Docker基本介绍
+我经常需要在本地临时跑一个 MySQL 或 Redis。直接安装当然也行，但用完以后还要处理服务、配置和数据目录，时间久了机器上会留下一堆自己都记不清的东西。
 
-[Docker](https://www.docker.com/) 是一个开源的应用容器引擎，允许开发者将应用及其依赖打包到一个轻量级、可移植的容器中。容器化技术使得应用可以在任何支持 Docker 的环境中运行，确保环境一致性。
+Docker 更适合这种场景：镜像负责提供运行环境，容器负责运行服务，数据则单独放进卷里。删掉容器不会顺手删掉数据，下次换个镜像还可以接着用。
 
+> 下面的命令用于单机学习和开发环境。密码必须替换，数据库与管理端口不要直接暴露到公网
 
+# 1. 先认识四个概念
 
-## 1.1 Docker 的核心概念
+- 镜像（Image）是只读的运行模板，里面有应用、依赖和默认配置
+- 容器（Container）是镜像启动后的实例，可以停止、重建或删除
+- 仓库（Registry）保存并分发镜像，Docker Hub 是最常见的公共仓库
+- Dockerfile 记录镜像的构建步骤，适合打包自己的应用
 
-1. **镜像（Image）**：Docker 镜像是一个只读模板，包含运行应用所需的代码、库、环境变量和配置文件。镜像是容器的基础。
+镜像和容器最容易混淆。可以把镜像看成安装包，把容器看成已经启动的程序，不过容器还多了一层文件系统和资源隔离。
 
-2. **容器（Container）**：容器是镜像的运行实例。容器是轻量级的，包含应用及其依赖，但共享主机操作系统的内核。
+# 2. 安装 Docker Engine
 
-3. **仓库（Registry）**：Docker 仓库用于存储和分发 Docker 镜像。Docker Hub 是最常用的公共仓库，用户也可以搭建私有仓库。
+Linux 发行版的安装命令会变化。下面只保留 Docker 官方仓库的当前做法，遇到发行版版本不匹配时，应回到 [Docker Engine 安装文档](https://docs.docker.com/engine/install/)核对。
 
-4. **Dockerfile**：Dockerfile 是一个文本文件，包含一系列指令，用于自动化构建 Docker 镜像。
+## 2.1 CentOS Stream
 
+Docker 当前支持仍在维护的 CentOS Stream 版本。先加入官方 RPM 仓库，再安装 Engine、Buildx 和 Compose 插件。
 
+```shell
+sudo dnf -y install dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 
-## 1.2 Docker 的优势
+sudo dnf install docker-ce docker-ce-cli containerd.io \
+  docker-buildx-plugin docker-compose-plugin
 
-- **环境一致性**：确保开发、测试和生产环境一致，避免“在我机器上能运行”的问题。
-- **快速部署**：容器启动速度快，资源占用少，适合微服务架构。
-- **隔离性**：每个容器相互隔离，确保应用安全性和稳定性。
-- **可移植性**：容器可以在任何支持 Docker 的平台上运行，简化了跨平台部署。
-
-
-
-## 1.3 安装 Docker
-
-### CentOS系统
-
-1. **更新软件包列表：**
-
-   ```shell
-   sudo yum update
-   ```
-
-2. **安装必要的依赖包：**
-
-   ```shell
-   sudo yum install -y yum-utils device-mapper-persistent-data lvm2
-   ```
-
-3. **添加Docker的官方存储库：**
-
-   ```shell
-   sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-   ```
-
-4. **安装Docker引擎：**
-
-   ```shell
-   sudo yum install docker-ce docker-ce-cli containerd.io
-   ```
-
-5. **启动Docker服务：**
-
-   ```shell
-   sudo systemctl start docker
-   ```
-
-6. **将Docker添加到启动项，使其在系统启动时自动启动：**
-
-   ```shell
-   sudo systemctl enable docker
-   ```
-
-7. **验证Docker是否成功安装：**
-
-   ```shell
-   sudo docker run hello-world
-   ```
-
-   如果一切正常，你将看到一条消息，表示Docker已经正确安装和配置。
-
-8. **配置Docker命令免sudo（可选，添加用户到docker组）：**
-
-   ```shell
-   sudo usermod -aG docker your_username
-   ```
-
-   请将 `your_username` 替换为你的实际用户名。然后退出当前终端会话，或者运行 `su - your_username`，以使更改生效。
-
-
-
-### Ubuntu系统
-
-1. **更新软件包列表：**
-
-   ```shell
-   sudo apt update
-   ```
-
-2. **安装依赖包以允许apt使用HTTPS：**
-
-   ```shell
-   sudo apt install apt-transport-https ca-certificates curl software-properties-common
-   ```
-
-3. **添加Docker的官方GPG密钥：**
-
-   ```shell
-   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-   ```
-
-4. **设置Docker的稳定存储库：**
-
-   ```shell
-   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-   ```
-
-   如果你使用的是其他架构，例如arm64，可以将 `[arch=amd64]` 部分替换为 `[arch=arm64]`。
-
-5. **更新软件包列表（再次更新）：**
-
-   ```shell
-   sudo apt update
-   ```
-
-6. **安装Docker引擎：**
-
-   ```shell
-   sudo apt install docker-ce docker-ce-cli containerd.io
-   ```
-
-7. **启动Docker服务：**
-
-   ```shell
-   sudo systemctl start docker
-   ```
-
-8. **将Docker添加到启动项，使其在系统启动时自动启动：**
-
-   ```shell
-   sudo systemctl enable docker
-   ```
-
-9. **验证Docker是否成功安装：**
-
-   ```shell
-   sudo docker run hello-world
-   ```
-
-   如果一切正常，你将看到一条消息，表示Docker已经正确安装和配置。
-
-   
-
-# 2. 常用命令
-
-- `docker pull <image>`：从仓库拉取镜像。
-- `docker build -t <image_name> .`：根据 Dockerfile 构建镜像。
-- `docker run <image>`：运行容器。
-- `docker ps`：查看运行中的容器。
-- `docker stop <container_id>`：停止容器。
-- `docker rm <container_id>`：删除容器。
-- `docker rmi <image_id>`：删除镜像。
-
-
-
-# 3. 部署常见服务
-
-### 
-
-## 3.1 Nginx
-
-### 1. 拉取镜像
-
-```bash
-docker pull nginx:1.25-alpine
+sudo systemctl enable --now docker
+sudo docker run --rm hello-world
 ```
 
+## 2.2 Ubuntu
 
+Ubuntu 使用官方 APT 仓库。旧教程里的 `apt-key` 已经不适合继续使用，GPG 密钥应放进 `/etc/apt/keyrings`。
 
-### 2. 创建并运行容器
+```shell
+sudo apt update
+sudo apt install -y ca-certificates curl
 
-```bash
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF_DOCKER
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF_DOCKER
+
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io \
+  docker-buildx-plugin docker-compose-plugin
+
+sudo docker run --rm hello-world
+```
+
+默认情况下，普通用户需要通过 `sudo` 调用 Docker。把用户加入 `docker` 组会获得接近 root 的权限，不应只把它当成省略几个字符的小设置；个人开发机确认风险后，可以执行：
+
+```shell
+sudo usermod -aG docker "$USER"
+```
+
+退出并重新登录后生效
+
+# 3. 常用命令
+
+| 命令 | 用途 |
+| --- | --- |
+| `docker pull <image>` | 拉取镜像 |
+| `docker images` | 查看本地镜像 |
+| `docker ps` | 查看运行中的容器 |
+| `docker ps -a` | 查看所有容器 |
+| `docker logs -f --tail 100 <container>` | 持续查看最近日志 |
+| `docker exec -it <container> <command>` | 在容器内执行命令 |
+| `docker stop <container>` | 停止容器 |
+| `docker start <container>` | 再次启动已有容器 |
+| `docker rm <container>` | 删除容器 |
+| `docker volume ls` | 查看数据卷 |
+
+我通常先看 `docker ps -a`，确认容器到底是没启动，还是启动后立刻退出。后一种情况直接看日志，比反复重跑命令有效得多。
+
+# 4. 部署常见服务
+
+下面示例尽量把管理端口绑定到 `127.0.0.1`，这样只有宿主机能直接访问。需要让局域网设备连接时，再根据防火墙和网络环境调整监听地址。
+
+示例使用稳定大版本或官方维护的浮动标签，方便复制运行。长期环境应固定到经过验证的补丁版本，并在升级前阅读对应的发布说明。
+
+## 4.1 Nginx
+
+### 启动容器
+
+```shell
 docker run -d \
   --name nginx \
   -p 80:80 \
@@ -190,185 +113,232 @@ docker run -d \
   -v nginx_html:/usr/share/nginx/html \
   -v nginx_conf:/etc/nginx/conf.d \
   --restart unless-stopped \
-  nginx:1.25-alpine
+  nginx:stable-alpine
 ```
 
-- `-p 80:80`：映射容器内 HTTP 端口 80 → 宿主机 80
-- `-p 443:443`：映射容器内 HTTPS 端口 443 → 宿主机 443
-- `-v nginx_html:/usr/share/nginx/html`：挂载网站文件目录
-- `-v nginx_conf:/etc/nginx/conf.d`：挂载 Nginx 配置文件目录
-- `--restart unless-stopped`：容器退出时自动重启
+两个命名卷分别保存网页文件和站点配置。第一次创建卷时，Docker 会把镜像内的默认内容复制进去。
 
+### 验证部署
 
-
-### 3. 验证部署
-
-- 查看容器状态：`docker ps | grep nginx`
-- 访问测试页面：浏览器打开 `http://localhost` 或 `http://服务器IP`，显示 Nginx 欢迎页
-
-
-
-## 3.2 MySQL
-
-### 1. 拉取镜像
-
-```bash
-docker pull mysql:latest
+```shell
+docker ps --filter name=nginx
+curl -I http://localhost
 ```
 
+返回 Nginx 响应头后，说明端口映射已经生效
 
+## 4.2 MySQL
 
-### 2. 创建并运行容器
+### 启动容器
 
-```bash
+```shell
 docker run -d \
   --name mysql \
-  -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD=your_secure_password \
+  -p 127.0.0.1:3306:3306 \
+  -e MYSQL_ROOT_PASSWORD='replace_with_a_strong_password' \
   -v mysql_data:/var/lib/mysql \
   --restart unless-stopped \
-  mysql:latest
+  mysql:8.4
 ```
 
-- `-p 3306:3306`：映射容器内 MySQL 端口 3306 → 宿主机 3306
-- `-e MYSQL_ROOT_PASSWORD=your_secure_password`：设置 MySQL root 用户密码
-- `-v mysql_data:/var/lib/mysql`：挂载数据卷（持久化数据库文件）
-- `--restart unless-stopped`：容器退出时自动重启
+`mysql_data` 保存数据库文件。删除并重建容器时，只要继续挂载这个卷，原来的数据就还在。
 
+### 验证部署
 
+MySQL 第一次启动需要初始化数据目录，看到容器处于运行状态不等于已经可以连接。先看日志，出现 ready for connections 后再进入客户端。
 
-### 3. 验证部署
-
-- 查看容器状态：`docker ps | grep mysql`
-- 命令行验证：`docker exec -it mysql mysql -u root -p` 输入密码后进入 MySQL Shell
-
-
-
-## 3.3 Redis
-
-### 1. 拉取镜像
-
-```bash
-docker pull redis:latest
+```shell
+docker logs -f mysql
+docker exec -it mysql mysql -u root -p
 ```
 
+## 4.3 Redis
 
+官方 Redis 镜像不会读取 `REDIS_PASSWORD` 环境变量。要设置密码，可以传入 `--requirepass`，或者挂载自己的 `redis.conf`。
 
-### 2. 创建并运行容器
+### 启动容器
 
-```bash
+```shell
 docker run -d \
   --name redis \
-  -p 6379:6379 \
-  -e REDIS_PASSWORD=your_secure_password \
+  -p 127.0.0.1:6379:6379 \
   -v redis_data:/data \
   --restart unless-stopped \
-  redis:latest
+  redis:8-alpine \
+  redis-server --appendonly yes --requirepass 'replace_with_a_strong_password'
 ```
 
-- `-p 6379:6379`：映射容器内 Redis 端口 6379 → 宿主机 6379
-- `-e REDIS_PASSWORD=your_secure_password`：设置 Redis 访问密码
-- `-v redis_data:/data`：挂载数据卷（持久化 Redis 数据）
-- `--restart unless-stopped`：容器退出时自动重启
+这里同时打开了 AOF 持久化。密码直接出现在命令行历史中仍然不够稳妥，生产环境更适合挂载配置文件或使用密钥管理方案。
 
+### 验证部署
 
-
-### 3. 验证部署
-
-- 查看容器状态：`docker ps | grep redis`
-- 命令行验证：`docker exec -it redis redis-cli -a your_secure_password PING` 返回 `PONG`
-
-
-
-## 3.4 RabbitMQ
-
-### 1. 拉取镜像
-
-```bash
-docker pull rabbitmq:3.13-management
+```shell
+docker exec -it redis \
+  redis-cli -a 'replace_with_a_strong_password' PING
 ```
 
+返回 `PONG` 即可
 
+## 4.4 RabbitMQ
 
-### 2. 创建并运行容器
+`management` 标签已经启用管理插件，5672 是 AMQP 端口，15672 是管理页面端口
 
-```bash
+### 启动容器
+
+```shell
 docker run -d \
   --name rabbitmq \
-  -p 5672:5672 \
-  -p 15672:15672 \
+  -p 127.0.0.1:5672:5672 \
+  -p 127.0.0.1:15672:15672 \
   -e RABBITMQ_DEFAULT_USER=admin \
-  -e RABBITMQ_DEFAULT_PASS=your_secure_password \
+  -e RABBITMQ_DEFAULT_PASS='replace_with_a_strong_password' \
   -v rabbitmq_data:/var/lib/rabbitmq \
   --restart unless-stopped \
-  rabbitmq:3.13-management
+  rabbitmq:4-management
 ```
 
--  `-p 5672:5672`：映射容器内 AMQP 协议端口 5672 → 宿主机 5672（消息通信）
-- `-p 15672:15672`：映射容器内 HTTP 端口 15672 → 宿主机 15672（管理界面）
-- ` -e RABBITMQ_DEFAULT_USER=admin`：设置环境变量：RabbitMQ 默认用户名
-- `-e RABBITMQ_DEFAULT_PASS=your_secure_password`：设置环境变量：默认用户密码
-- `-v rabbitmq_data:/var/lib/rabbitmq`：挂载数据卷（宿主机命名卷 → 容器数据目录）
-- `--restart unless-stopped`：容器退出时自动重启（除非手动停止）
+### 验证部署
 
-
-
-### 3. 验证部署
-
-- 查看容器状态：`docker ps | grep rabbitmq`
-- 访问管理界面：http://localhost:15672 或 http://服务器IP:15672。使用设置的账号密码登录（admin/your_secure_password）
-
-## 3.5 Nacos
-### 1. 拉取镜像
-
-```bash
-docker pull nacos/nacos-server:latest
-```
-### 2. 创建并运行容器
-
-```bash
-docker run --name nacos-standalone-derby \
-    -e MODE=standalone \
-    -e NACOS_AUTH_TOKEN=${your_nacos_auth_secret_token} \
-    -e NACOS_AUTH_IDENTITY_KEY=${your_nacos_server_identity_key} \
-    -e NACOS_AUTH_IDENTITY_VALUE=${your_nacos_server_identity_value} \
-    -p 8848:8848 \
-    -d nacos/nacos-server:latest
-```
-- `-e MODE=standalone`：设置 Nacos 运行模式为单机模式
-- `-e NACOS_AUTH_TOKEN=${your_nacos_auth_secret_token}`：Nacos 用于生成JWT Token的密钥，使用长度大于32字符的字符串，再经过Base64编码。
-- `-e NACOS_AUTH_IDENTITY_KEY=${your_nacos_server_identity_key}`：Nacos Server端之间 Inner API的身份标识的Key
-- `-e NACOS_AUTH_IDENTITY_VALUE=${your_nacos_server_identity_value}`：Nacos Server端之间 Inner API的身份标识的Value
-- `-p 8848:8848`：映射容器内 Nacos 控制台端口
-
-### 3. 验证部署
-- 查看容器状态：`docker ps | grep nacos-standalone`
-- 访问 Nacos 控制台：http://localhost:8848/nacos
-
-
-
-## 3.6 Minio
-
-### 1. 拉取镜像
-
-```bash
-docker pull minio/minio:RELEASE.2025-04-22T22-12-26Z
+```shell
+docker exec rabbitmq rabbitmq-diagnostics -q ping
 ```
 
-### 2. 创建容器并运行
+命令成功后，打开 `http://localhost:15672`，使用上面设置的账号和密码登录
 
-```bash
+## 4.5 Nacos
+
+Nacos 官方的单机镜像适合学习和开发，不适合直接替代生产集群。当前版本的控制台和服务端口已经分开，因此示例同时映射 8080、8848 和 9848。
+
+先创建只存放在本机的环境变量文件 `nacos.env`：
+
+```dotenv
+MODE=standalone
+NACOS_AUTH_ENABLE=true
+NACOS_AUTH_ADMIN_ENABLE=true
+NACOS_AUTH_CONSOLE_ENABLE=true
+NACOS_AUTH_SYSTEM_TYPE=nacos
+NACOS_AUTH_TOKEN=replace_with_a_base64_secret_longer_than_32_bytes
+NACOS_AUTH_IDENTITY_KEY=serverIdentity
+NACOS_AUTH_IDENTITY_VALUE=replace_with_a_random_identity_value
+```
+
+`NACOS_AUTH_TOKEN` 应由至少 32 字节的随机内容生成，再进行 Base64 编码。不要把真实的 `nacos.env` 提交到仓库。
+
+```shell
+openssl rand -base64 48
+```
+
+### 启动容器
+
+```shell
+docker run -d \
+  --name nacos \
+  --env-file nacos.env \
+  -p 127.0.0.1:8080:8080 \
+  -p 127.0.0.1:8848:8848 \
+  -p 127.0.0.1:9848:9848 \
+  --restart unless-stopped \
+  nacos/nacos-server:latest
+```
+
+### 验证部署
+
+```shell
+docker logs -f nacos
+```
+
+启动完成后访问 `http://localhost:8080`。首次启用鉴权时，按控制台提示初始化管理员密码并妥善保存。
+
+## 4.6 MinIO
+
+单节点、单磁盘 MinIO 适合本地测试，没有额外的数据冗余。9000 提供 S3 API，9001 是 Web Console。
+
+### 启动容器
+
+```shell
 docker run -d \
   --name minio \
-  -p 9000:9000 \
-  -p 9001:9001 \
-  -e "MINIO_ROOT_USER=admin" \
-  -e "MINIO_ROOT_PASSWORD=adminpassword" \
-  -v /home/user/minio/data:/data \
-  minio/minio:RELEASE.2025-04-22T22-12-26Z \
-  server /data --console-address ":9001"
+  -p 127.0.0.1:9000:9000 \
+  -p 127.0.0.1:9001:9001 \
+  -e MINIO_ROOT_USER=minioadmin \
+  -e MINIO_ROOT_PASSWORD='replace_with_a_strong_password' \
+  -v minio_data:/mnt/data \
+  --restart unless-stopped \
+  quay.io/minio/minio \
+  server /mnt/data --console-address ':9001'
 ```
 
-### 3. 验证部署
+### 验证部署
 
-- 访问 Nacos 控制台：http://localhost:9001
+```shell
+docker logs --tail 100 minio
+```
+
+打开 `http://localhost:9001` 登录控制台，应用连接 S3 API 时使用 `http://localhost:9000`
+
+# 5. 更新、重建与删除
+
+容器不应该靠进入内部手工更新。拉取新镜像后删除旧容器，再用原命令重建；数据卷不变，服务数据也不会因为容器重建而消失。
+
+```shell
+docker pull mysql:8.4
+docker stop mysql
+docker rm mysql
+
+# 重新执行前面的 docker run 命令
+```
+
+如果服务不再需要，先删容器，再决定是否删除数据卷：
+
+```shell
+docker stop mysql
+docker rm mysql
+
+# 确认数据不再需要后再执行
+docker volume rm mysql_data
+```
+
+最后一条命令会直接删除数据库文件，没有回收站。动手之前最好先运行 `docker volume inspect mysql_data`，确认卷名和挂载位置。
+
+# 6. 常见问题
+
+## 6.1 容器启动后立刻退出
+
+先查状态和日志：
+
+```shell
+docker ps -a
+docker logs --tail 200 <container_name>
+```
+
+常见原因是启动参数错误、配置文件无法读取，或者挂载目录权限不对
+
+## 6.2 端口已经被占用
+
+`Bind for 0.0.0.0:xxxx failed` 表示宿主机端口冲突。可以停止占用端口的程序，也可以修改 `-p` 左边的宿主机端口。
+
+```shell
+lsof -i :3306
+```
+
+例如 `-p 13306:3306` 表示通过宿主机 13306 访问容器内的 3306
+
+## 6.3 重建容器后数据不见了
+
+先检查新容器是否挂载了原来的命名卷：
+
+```shell
+docker inspect <container_name> --format '{{json .Mounts}}'
+docker volume ls
+```
+
+数据通常没有消失，只是新容器挂到了另一个卷或空目录
+
+# 7. 参考资料
+
+- [Docker Engine 安装文档](https://docs.docker.com/engine/install/)
+- [Docker 官方 Redis 镜像](https://hub.docker.com/_/redis)
+- [Docker 官方 MySQL 镜像](https://hub.docker.com/_/mysql)
+- [Docker 官方 RabbitMQ 镜像](https://hub.docker.com/_/rabbitmq)
+- [Nacos Docker 快速开始](https://nacos.io/en/docs/latest/quickstart/quick-start-docker/)
+- [MinIO 单节点容器部署](https://min.io/docs/minio/container/operations/install-deploy-manage/deploy-minio-single-node-single-drive.html)

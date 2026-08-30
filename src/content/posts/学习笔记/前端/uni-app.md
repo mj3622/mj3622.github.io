@@ -1981,9 +1981,9 @@ uni.request({
 
 
 
-### 2. Promise 
+### 2. Promise
 
-Promise 是 JavaScript 中用于处理异步操作的对象，它可以将异步操作转换为链式调用，避免回调地狱（Callback Hell），使代码更易读和维护。
+Promise 用来表示一个尚未完成的异步操作，后续结果通过 `then`、`catch` 或 `await` 处理
 
 **三种状态**:
 
@@ -1993,7 +1993,7 @@ Promise 是 JavaScript 中用于处理异步操作的对象，它可以将异步
 
 
 
-在uniapp中使用 Promise 发送网络请求：
+在 uni-app 中，可以用 Promise 包装网络请求：
 
 ```javascript
 function request(url, method = 'GET', data = {}) {
@@ -2014,11 +2014,9 @@ request('https://example.com/api/data')
     .catch(err => console.error('请求失败:', err));
 ```
 
-###  
-
 **使用 `async/await` 简化 Promise**
 
-`async/await` 是 Promise 的语法糖，可以让异步代码看起来像同步代码，更易读和维护。
+`async/await` 建立在 Promise 之上。相比连续回调，它更容易看清请求与异常处理的先后顺序。
 
 使用示例：
 
@@ -2039,92 +2037,127 @@ get()
 
 
 
-# 5. 媒体API
+# 5. 图片选择、预览与保存
 
-## 5.1 图片
+图片相关 API 看起来不难，真正容易踩坑的是路径。`uni.chooseImage` 返回的是临时路径，只保证在本次应用运行期间可用；保存到应用沙箱、上传服务器和写入系统相册是三件不同的事。
 
-### 1. 选择图片
+> 微信小程序从基础库 2.21.0 开始不再维护 `wx.chooseImage`，新项目应根据目标平台评估 `uni.chooseMedia`
 
-`uni.chooseImage(OBJECT)`：从本地相册选择图片或使用相机拍照。
+## 5.1 选择图片
 
-**OBJECT 参数说明**
+下面限制用户只选择一张压缩图片。成功后得到的 `tempFilePaths` 是路径数组，即使 `count` 为 1 也要取第一项。
 
-| 参数名     | 类型            | 必填 | 说明                                                         | 平台差异说明                              |
-| :--------- | :-------------- | :--- | :----------------------------------------------------------- | :---------------------------------------- |
-| count      | Number          | 否   | 最多可以选择的图片张数，默认9                                | 见下方说明                                |
-| sizeType   | `Array<String>` | 否   | original 原图，compressed 压缩图，默认二者都有               | App、微信小程序、支付宝小程序、百度小程序 |
-| extension  | `Array<String>` | 否   | 根据文件拓展名过滤，每一项都不能是空字符串。默认不过滤。     | H5(HBuilder X2.9.9+)                      |
-| sourceType | `Array<String>` | 否   | album 从相册选图，camera 使用相机，默认二者都有。如需直接开相机或直接选相册，请只使用一个选项 |                                           |
-| crop       | Object          | 否   | 图像裁剪参数，设置后 sizeType 失效                           | App 3.1.19+                               |
-| success    | Function        | 是   | 成功则返回图片的本地文件路径列表 tempFilePaths               |                                           |
-| fail       | Function        | 否   | 接口调用失败的回调函数                                       | 小程序、App                               |
-| complete   | Function        | 否   | 接口调用结束的回调函数（调用成功、失败都会执行）             |                                           |
+```javascript
+function chooseOneImage() {
+    uni.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: (result) => {
+            const filePath = result.tempFilePaths[0];
+            console.log('临时图片路径:', filePath);
+        },
+        fail: (error) => {
+            console.error('选择图片失败:', error);
+        }
+    });
+}
+```
 
-**crop 参数说明**
+用户取消选择也可能进入 `fail` 回调，界面上不必一律提示“操作失败”。我一般先记录 `errMsg`，再根据目标平台区分主动取消和权限问题。
 
-| 参数名  | 类型    | 必填 | 说明                                                         |
-| :------ | :------ | :--- | :----------------------------------------------------------- |
-| quality | Number  | 否   | 取值范围为1-100，数值越小，质量越低（仅对jpg格式有效）。默认值为80。 |
-| width   | Number  | 是   | 裁剪的宽度，单位为px，用于计算裁剪宽高比。                   |
-| height  | Number  | 是   | 裁剪的高度，单位为px，用于计算裁剪宽高比。                   |
-| resize  | Boolean | 否   | 是否将width和height作为裁剪保存图片真实的像素值。默认值为true。注：设置为false时在裁剪编辑界面显示图片的像素值，设置为true时不显示 |
+## 5.2 预览图片
 
-**success 返回参数说明**
+`uni.previewImage` 接收一个 URL 数组，`current` 表示打开预览时先显示哪一张。路径可以来自本地临时文件，也可以是网络地址。
 
-注：文件的临时路径，在应用本次启动期间可以正常使用，如需持久保存，需在主动调用 uni.saveFile，在应用下次启动时才能访问得到。
+```javascript
+function previewImages(urls, current = 0) {
+    uni.previewImage({
+        urls,
+        current,
+        loop: true,
+        fail: (error) => {
+            console.error('预览图片失败:', error);
+        }
+    });
+}
+```
 
-| 参数          | 类型                         | 说明                                       |
-| :------------ | :--------------------------- | :----------------------------------------- |
-| tempFilePaths | `Array<String>`              | 图片的本地文件路径列表                     |
-| tempFiles     | `Array<Object>、Array<File>` | 图片的本地文件列表，每一项是一个 File 对象 |
+不同平台对指示器、长按菜单和循环预览的支持并不完全一致。依赖这些选项前，应在实际发布的平台上测试，而不是只看 H5 模拟结果。
 
-**File 对象结构如下**
+## 5.3 保存到系统相册
 
-| 参数 | 类型   | 说明                           |
-| :--- | :----- | :----------------------------- |
-| path | String | 本地文件路径                   |
-| size | Number | 本地文件大小，单位：B          |
-| name | String | 包含扩展名的文件名称，仅H5支持 |
-| type | String | 文件类型，仅H5支持             |
+`uni.saveImageToPhotosAlbum` 接受临时文件路径或持久文件路径，不支持直接传入网络地址。选择图片后，可以把返回的临时路径直接交给它。
 
+```javascript
+function chooseAndSaveImage() {
+    uni.chooseImage({
+        count: 1,
+        success: (chooseResult) => {
+            const filePath = chooseResult.tempFilePaths[0];
 
+            uni.saveImageToPhotosAlbum({
+                filePath,
+                success: () => {
+                    uni.showToast({
+                        title: '已保存到相册',
+                        icon: 'success'
+                    });
+                },
+                fail: (error) => {
+                    console.error('保存图片失败:', error);
+                    uni.showToast({
+                        title: '保存失败',
+                        icon: 'none'
+                    });
+                }
+            });
+        }
+    });
+}
+```
 
-### 2. 预览图片
+网络图片需要先下载，下载成功后再保存临时文件：
 
-`uni.previewImage(OBJECT)`：预览图片。
+```javascript
+function saveRemoteImage(url) {
+    uni.downloadFile({
+        url,
+        success: (downloadResult) => {
+            if (downloadResult.statusCode !== 200) {
+                uni.showToast({
+                    title: '图片下载失败',
+                    icon: 'none'
+                });
+                return;
+            }
 
-**OBJECT 参数说明**
+            uni.saveImageToPhotosAlbum({
+                filePath: downloadResult.tempFilePath,
+                success: () => {
+                    uni.showToast({
+                        title: '已保存到相册',
+                        icon: 'success'
+                    });
+                },
+                fail: (error) => {
+                    console.error('保存图片失败:', error);
+                }
+            });
+        },
+        fail: (error) => {
+            console.error('下载图片失败:', error);
+        }
+    });
+}
+```
 
-| 参数名           | 类型            | 必填 | 说明                                                         | 平台差异说明     |
-| :--------------- | :-------------- | :--- | :----------------------------------------------------------- | :--------------- |
-| current          | String/Number   | 是   | 详见下方说明                                                 |                  |
-| showmenu         | Boolean         | 否   | 是否显示长按菜单，默认值为 true                              | 微信小程序2.13.0 |
-| urls             | `Array<String>` | 是   | 需要预览的图片链接列表                                       |                  |
-| indicator        | String          | 否   | 图片指示器样式，可取值："default" - 底部圆点指示器； "number" - 顶部数字指示器； "none" - 不显示指示器。 | App              |
-| loop             | Boolean         | 否   | 是否可循环预览，默认值为 false                               | App              |
-| longPressActions | Object          | 否   | 长按图片显示操作菜单，如不填默认为**保存相册**               | App 1.9.5+       |
-| success          | Function        | 否   | 接口调用成功的回调函数                                       |                  |
-| fail             | Function        | 否   | 接口调用失败的回调函数                                       |                  |
-| complete         | Function        | 否   | 接口调用结束的回调函数（调用成功、失败都会执行）             |                  |
+这个 API 在 H5 端不可用，因为浏览器不允许网页直接写入系统相册。App 和小程序还会受到相册权限、隐私协议与平台审核规则的限制，实际项目需要在 `fail` 回调里给出对应提示。
 
-**longPressActions 参数说明**
+`uni.saveFile` 也带一个“保存”，但它保存到应用沙箱，用户不会在系统相册里看到文件。需要下次启动继续读取临时文件时用它，需要让用户在相册中找到图片时才用 `uni.saveImageToPhotosAlbum`。
 
-| 参数      | 类型            | 必填 | 说明                                             |
-| :-------- | :-------------- | :--- | :----------------------------------------------- |
-| itemList  | `Array<String>` | 是   | 按钮的文字数组                                   |
-| itemColor | String          | 否   | 按钮的文字颜色，字符串格式，默认为"#000000"      |
-| success   | Function        | 否   | 接口调用成功的回调函数，详见返回参数说明         |
-| fail      | Function        | 否   | 接口调用失败的回调函数                           |
-| complete  | Function        | 否   | 接口调用结束的回调函数（调用成功、失败都会执行） |
+# 6. 参考资料
 
-**success 返回参数说明**
-
-| 参数     | 类型   | 说明                     |
-| :------- | :----- | :----------------------- |
-| index    | Number | 用户长按图片的索引值     |
-| tapIndex | Number | 用户点击按钮列表的索引值 |
-
-
-
-### 3. 保存图片
-
+- [uni-app 教程](https://uniapp.dcloud.net.cn/tutorial/)
+- [Vue 官方指南](https://cn.vuejs.org/guide/introduction.html)
+- [uni-app 图片 API](https://uniapp.dcloud.net.cn/api/media/image)
