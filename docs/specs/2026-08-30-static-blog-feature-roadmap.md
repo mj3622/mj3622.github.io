@@ -4,7 +4,7 @@
 
 ## 目标
 
-在保持 Astro 静态导出和 GitHub Pages 部署方式不变的前提下，加入自动化回归、系列文章、相关推荐、最近更新、搜索筛选、响应式图片、原生路由、文章分享、PWA 离线阅读和可选访问统计
+在保持 Astro 静态导出和 GitHub Pages 部署方式不变的前提下，加入自动化回归、系列文章、相关推荐、最近更新、搜索筛选、响应式图片、原生路由、PWA 离线阅读和可选访问统计
 
 本路线图明确排除评论功能，并禁止引入需要额外自建、部署或维护的后端服务
 
@@ -13,7 +13,6 @@
 - 保持 `output: static`，不增加 Astro API Route、SSR Adapter、数据库或 Serverless Function
 - 内容关系、相关推荐、系列顺序和最近更新全部在构建阶段计算
 - 搜索继续使用 Pagefind 静态索引，不增加搜索服务
-- 分享优先使用浏览器 Web Share 和 Clipboard API，二维码只允许在浏览器本地生成
 - 离线能力使用静态 Web App Manifest、Service Worker 和 Cache Storage
 - 访问统计仅允许接入托管服务，并且必须可通过配置完全关闭
 - 不提交密钥、账号信息或私有 Token
@@ -76,13 +75,6 @@ seriesOrder: 3
 - `astro:before-preparation`
 - `astro:after-swap`
 - `astro:page-load`
-
-### 分享
-
-- 支持 Web Share API 的浏览器显示“分享”操作
-- 其他浏览器回退为复制文章链接
-- 二维码在用户主动打开时于浏览器本地生成，不调用远程二维码接口
-- 分享入口不常驻遮挡正文，移动端和桌面端使用同一组件
 
 ### PWA
 
@@ -377,34 +369,9 @@ PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN=
 - [ ] 不再依赖 Swup
 - [ ] 全量自动化检查通过
 
-### Phase 4：分享、离线和统计
+### Phase 4：离线和统计
 
-#### Task 10：文章分享与本地二维码
-
-**说明**：新增分享组件，优先调用 Web Share API，回退到复制链接，并按需生成二维码
-
-**验收标准**：
-
-- [ ] 支持浏览器调用原生分享
-- [ ] 不支持时可以复制 canonical URL
-- [ ] 二维码生成过程不发送网络请求
-
-**验证**：
-
-- [ ] Playwright 模拟 Web Share 支持和不支持两种环境
-- [ ] 二维码内容等于文章 canonical URL
-
-**依赖**：Task 2
-
-**可能修改**：
-
-- `src/components/ShareActions.svelte`
-- `src/pages/posts/[...slug].astro`
-- `src/i18n/`
-
-**规模**：中
-
-#### Task 11：PWA 与离线阅读
+#### Task 10：PWA 与离线阅读
 
 **说明**：生成 Manifest、Service Worker、离线 fallback，并缓存已访问文章和 Pagefind 资源
 
@@ -433,7 +400,7 @@ PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN=
 
 **规模**：中
 
-#### Task 12：可选 Cloudflare Web Analytics
+#### Task 11：可选 Cloudflare Web Analytics
 
 **说明**：增加默认关闭的统计配置，仅当公开 Token 存在时加载 Beacon
 
@@ -470,7 +437,7 @@ PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN=
 - [ ] `pnpm test:e2e`
 - [ ] 完整依赖安全审计为 0
 - [ ] 桌面和移动端视觉回归通过
-- [ ] 离线、分享、搜索、系列和相关推荐验收通过
+- [ ] 离线、搜索、系列和相关推荐验收通过
 - [ ] 没有新增自建后端、数据库、API Route 或 Serverless Function
 
 ## 风险与缓解
@@ -482,7 +449,6 @@ PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN=
 | Service Worker 缓存旧文章 | 高 | 使用版本化预缓存和更新提示，不缓存外部请求 |
 | Pagefind 筛选增加索引体积 | 中 | 只索引分类、标签和年份，构建前后比较体积 |
 | 推荐结果不稳定 | 中 | 固定排序规则并添加单元测试 |
-| 二维码依赖增加客户端体积 | 低 | 仅在用户打开二维码时动态加载 |
 | 托管统计涉及第三方请求 | 中 | 默认关闭，文档说明数据流，用户提供 Token 后再启用 |
 
 ## 明确不做
@@ -496,6 +462,6 @@ PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN=
 
 ## 实施顺序
 
-`Playwright → 内容模型 → 最近更新 → 系列/推荐 → 搜索筛选 → 图片 Schema → 响应式图片 → ClientRouter → 分享 → PWA → 可选统计`
+`Playwright → 内容模型 → 最近更新 → 系列/推荐 → 搜索筛选 → 图片 Schema → 响应式图片 → ClientRouter → PWA → 可选统计`
 
 每完成 2 至 3 个任务进行一次构建、浏览器和差异检查，任何阶段都必须保持博客可构建、可部署和旧文章 URL 兼容

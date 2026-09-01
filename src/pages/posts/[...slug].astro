@@ -4,7 +4,6 @@ import License from '@components/misc/License.astro'
 import Markdown from '@components/misc/Markdown.astro'
 import RelatedPosts from '@components/RelatedPosts.astro'
 import SeriesNavigation from '@components/SeriesNavigation.astro'
-import ShareActions from '@components/ShareActions.svelte'
 import I18nKey from '@i18n/i18nKey'
 import { i18n } from '@i18n/translation'
 import MainGridLayout from '@layouts/MainGridLayout.astro'
@@ -43,7 +42,6 @@ const { remarkPluginFrontmatter } = renderedEntry as typeof renderedEntry & {
 const allPosts = await getSortedPosts()
 const seriesContext = getSeriesContext(entry, allPosts)
 const relatedPosts = getRelatedPosts(entry, allPosts)
-const canonicalUrl = new URL(Astro.url.pathname, Astro.site).toString()
 
 const coverImage = entry.data.image
 let coverImageForJsonLd: string | undefined
@@ -139,8 +137,6 @@ const jsonLd = {
             <Markdown class="mb-6 markdown-content onload-animation">
                 <Content />
             </Markdown>
-
-            <ShareActions title={entry.data.title} url={canonicalUrl} client:idle />
 
             {licenseConfig.enable && <License title={entry.data.title} pubDate={entry.data.published} class="mb-6 rounded-xl license-container onload-animation"></License>}
 
