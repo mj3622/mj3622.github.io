@@ -70,6 +70,9 @@ test('代码块保留行号和复制操作', async ({ page }) => {
 
   await page.goto(postWithCode)
 
+  await expect(page.locator('.mermaid-diagram svg')).toHaveCount(2)
+  await waitForVisualStability(page)
+
   const codeBlocks = page.locator('.expressive-code')
   await expect(codeBlocks.first()).toBeVisible()
   expect(await codeBlocks.count()).toBeGreaterThan(0)

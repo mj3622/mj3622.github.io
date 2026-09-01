@@ -131,6 +131,30 @@ const className = Astro.props.class
       color: inherit
       white-space: nowrap
 
+    .mermaid-diagram
+      width: 100%
+      overflow-x: auto
+      margin: 1.5rem 0
+      padding: 1rem
+      border: 1px solid var(--line-divider)
+      border-radius: 0.75rem
+      background: var(--card-bg)
+      text-align: center
+      -webkit-overflow-scrolling: touch
+
+      svg
+        display: block
+        max-width: none !important
+        height: auto
+        margin: 0 auto
+
+    .mermaid-diagram-error
+      font-family: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace
+      font-size: 0.875rem
+      line-height: 1.5rem
+      text-align: left
+      white-space: pre
+
     ul
       li
         &::marker
@@ -410,3 +434,7 @@ const className = Astro.props.class
     transition-duration: 0.15s
 
 </style>
+
+<script>
+import '../../utils/mermaid'
+</script>
