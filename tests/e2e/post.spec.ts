@@ -20,14 +20,14 @@ test('文章封面不会替换全站 Banner', async ({ page }) => {
     const cover = document.querySelector<HTMLImageElement>('#post-cover img')
     return {
       banner: banner?.currentSrc,
+      bannerWidth: banner?.naturalWidth,
       cover: cover?.currentSrc,
     }
   })
-  expect(images.banner).toContain('banner10')
+  expect(images.banner).toContain('banner-sakura-compact')
   expect(images.cover).toContain('rss')
   expect(images.banner).not.toBe(images.cover)
-  await expect(page.locator('#banner img')).toHaveAttribute('srcset', /640w/)
-  await expect(page.locator('#banner img')).toHaveAttribute('sizes', '100vw')
+  expect(images.bannerWidth).toBeGreaterThanOrEqual(2000)
   await expect(page.locator('#banner img')).toHaveAttribute(
     'fetchpriority',
     'high',

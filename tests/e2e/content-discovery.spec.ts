@@ -103,7 +103,10 @@ test('ClientRouter 连续导航会更新页面且不会重复初始化', async (
   await firstPost.click()
   await expect(page).toHaveURL(/\/posts\//)
   await expect(page.locator('article h1')).toBeVisible()
-  await expect(page.locator('#banner img')).toHaveAttribute('src', /banner10/)
+  await expect(page.locator('#banner img')).toHaveAttribute(
+    'src',
+    /banner-sakura-compact/,
+  )
   await page.goBack()
   await expect(page).toHaveURL(/\/updated\/$/)
   await clickNavLink('/about/')
