@@ -13,6 +13,7 @@ import {
   BANNER_HEIGHT_EXTEND,
   MAIN_PANEL_OVERLAPS_BANNER_HEIGHT,
 } from '../constants/constants'
+import { pathsEqual, url } from '../utils/url-utils'
 import Layout from './Layout.astro'
 
 interface Props {
@@ -44,7 +45,14 @@ const hasBannerCredit =
   siteConfig.banner.enable && siteConfig.banner.credit.enable
 const hasBannerLink = !!siteConfig.banner.credit.url
 const hasCustomBanner = !!(banner && banner.trim() !== '')
-const resolvedBanner = hasCustomBanner ? banner : siteConfig.banner.src
+const isHomePage = pathsEqual(Astro.url.pathname, url('/'))
+const useCompactBanner =
+  !hasCustomBanner && !isHomePage && !!siteConfig.banner.compactSrc
+const resolvedBanner = hasCustomBanner
+  ? banner
+  : useCompactBanner
+    ? siteConfig.banner.compactSrc!
+    : siteConfig.banner.src
 const resolvedBannerBasePath = hasCustomBanner ? bannerBasePath : '/'
 
 const mainPanelTop = siteConfig.banner.enable
@@ -66,15 +74,14 @@ const shouldShowRightToc = siteConfig.toc.enable && !shouldUseSidebarToc
 
 <!-- Banner -->
 {siteConfig.banner.enable && <div id="banner-wrapper" class=`absolute z-10 w-full transition duration-700 overflow-hidden` style=`top: -${BANNER_HEIGHT_EXTEND}vh`>
-    <ImageWrapper id="banner" alt="Banner image of the blog" class:list={["object-cover h-full transition duration-700 opacity-0 scale-105"]}
+    <ImageWrapper id="banner" alt="Banner image of the blog" class:list={["object-cover transition duration-700 opacity-0 scale-105", { 'banner-compact': useCompactBanner }]}
                   src={resolvedBanner}
-                  position={siteConfig.banner.position}
+                  position="var(--banner-image-position)"
                   basePath={resolvedBannerBasePath}
                   loading="eager"
                   decoding="sync"
                   fetchpriority="high"
-                  layout="full-width"
-                  sizes="100vw"
+                  layout="none"
     >
     </ImageWrapper>
 </div>}

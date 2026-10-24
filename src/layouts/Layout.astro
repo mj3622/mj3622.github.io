@@ -203,6 +203,7 @@ const bannerOffset =
 
 <style is:global define:vars={{
 	bannerOffset,
+	'banner-position': siteConfig.banner.position || 'center',
 	'banner-height-home': `${BANNER_HEIGHT_HOME}vh`,
 	'banner-height': `${BANNER_HEIGHT}vh`,
 }}>
@@ -213,7 +214,13 @@ const bannerOffset =
 	}
 
 	.enable-banner #banner {
-		@apply h-[var(--banner-height-home)] translate-y-[var(--bannerOffset)]
+		--banner-image-position: center;
+		@apply h-[calc(var(--banner-height-home)_-_10vh)] translate-y-[var(--bannerOffset)]
+	}
+	.enable-banner #banner.banner-compact {
+		--banner-image-position: center 30%;
+		height: var(--banner-height);
+		translate: 0 calc(var(--banner-height-home) - var(--banner-height));
 	}
 	.enable-banner #top-row {
 		@apply h-[calc(var(--banner-height-home)_-_4.5rem)] transition-all duration-300
@@ -227,6 +234,7 @@ const bannerOffset =
 			@apply h-[var(--banner-height-home)] translate-y-[var(--banner-height-extend)]
 		}
 		.enable-banner.is-home #banner {
+			--banner-image-position: var(--banner-position);
 			@apply h-[var(--banner-height-home)] translate-y-0
 		}
 		.enable-banner.is-home #main-grid {
@@ -335,6 +343,8 @@ function showBanner() {
 }
 
 function init() {
+	// ClientRouter replaces the root attributes, including viewport-derived CSS variables
+	updateLayoutMetrics();
 	loadTheme();
 	loadHue();
 	initCustomScrollbar();
@@ -412,7 +422,7 @@ function scrollFunction() {
 }
 window.onscroll = scrollFunction
 
-window.onresize = () => {
+function updateLayoutMetrics() {
 	// calculate the --banner-height-extend, which needs to be a multiple of 4 to avoid blurry text
 	let offset = Math.floor(window.innerHeight * (BANNER_HEIGHT_EXTEND / 100));
 	offset = offset - offset % 4;
@@ -424,6 +434,8 @@ window.onresize = () => {
 	const tocWidth = (window.innerWidth - mainGridWidthPx) / 2 - rootFontSize
 	document.documentElement.style.setProperty('--toc-width', `${tocWidth}px`);
 }
+
+window.onresize = updateLayoutMetrics
 
 </script>
 
