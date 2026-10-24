@@ -15,7 +15,10 @@ test('首页保持稳定的语义和响应式布局', async ({ page }) => {
   await expect(page.locator('h1')).toHaveCount(1)
   await expect(page.locator('nav')).toHaveCount(1)
   await expect(page.locator('footer')).toHaveCount(1)
-  await expect(page.locator('#banner img')).toHaveAttribute('src', /banner-sakura/)
+  await expect(page.locator('#banner img')).toHaveAttribute(
+    'src',
+    /banner-sakura/,
+  )
   await expectNoHorizontalOverflow(page)
   if (!process.env.CI) {
     await expect(page.locator('#navbar')).toHaveScreenshot('navbar.png')
@@ -57,22 +60,32 @@ test('横幅在站内切换和返回后保持取景与布局', async ({ page }, 
   await page.goto('/')
   await waitForVisualStability(page)
   await page.locator('#banner').evaluate(async banner => {
-    await Promise.all(banner.getAnimations().map(animation => animation.finished))
+    await Promise.all(
+      banner.getAnimations().map(animation => animation.finished),
+    )
   })
 
-  const initial = await page.evaluate(() => ({
-    timeOrigin: performance.timeOrigin,
-    offset: document.documentElement.style.getPropertyValue(
-      '--banner-height-extend',
-    ),
-    bannerTop: document.querySelector('#banner')!.getBoundingClientRect().top,
-    gridTop: document.querySelector('#main-grid')!.getBoundingClientRect().top,
-  }))
+  const initial = await page.evaluate(() => {
+    const banner = document.querySelector('#banner')
+    const grid = document.querySelector('#main-grid')
+    if (!banner || !grid) throw new Error('首页横幅或内容布局缺失')
+    return {
+      timeOrigin: performance.timeOrigin,
+      offset: document.documentElement.style.getPropertyValue(
+        '--banner-height-extend',
+      ),
+      bannerTop: banner.getBoundingClientRect().top,
+      gridTop: grid.getBoundingClientRect().top,
+    }
+  })
   expect(parseFloat(initial.offset)).toBeGreaterThan(0)
   const article = page.locator('#main-container a[href^="/posts/"]').first()
   const articleURL = await article.getAttribute('href')
+  if (!articleURL) throw new Error('首页文章链接缺少目标地址')
   await article.click()
-  await page.waitForURL(url => decodeURI(url.pathname) === decodeURI(articleURL!))
+  await page.waitForURL(
+    url => decodeURI(url.pathname) === decodeURI(articleURL),
+  )
   await expect(page.locator('#banner img')).toHaveAttribute(
     'src',
     /banner-sakura-compact/,
@@ -102,9 +115,10 @@ test('横幅在站内切换和返回后保持取景与布局', async ({ page }, 
     .poll(async () => {
       const banner = await page.locator('#banner').boundingBox()
       const grid = await page.locator('#main-grid').boundingBox()
+      if (!banner || !grid) throw new Error('返回首页后横幅或内容布局不可见')
       return Math.max(
-        Math.abs(banner!.y - initial.bannerTop),
-        Math.abs(grid!.y - initial.gridTop),
+        Math.abs(banner.y - initial.bannerTop),
+        Math.abs(grid.y - initial.gridTop),
       )
     })
     .toBeLessThan(2)
@@ -114,11 +128,17 @@ test('横幅在站内切换和返回后保持取景与布局', async ({ page }, 
   )
 
   await article.click()
-  await page.waitForURL(url => decodeURI(url.pathname) === decodeURI(articleURL!))
+  await page.waitForURL(
+    url => decodeURI(url.pathname) === decodeURI(articleURL),
+  )
   await page.getByRole('link', { name: 'Minjer', exact: true }).click()
   await page.waitForURL('/')
   await expect
-    .poll(async () => (await page.locator('#main-grid').boundingBox())!.y)
+    .poll(() =>
+      page
+        .locator('#main-grid')
+        .evaluate(grid => grid.getBoundingClientRect().top),
+    )
     .toBeCloseTo(initial.gridTop, 0)
   await expect(page.locator('html')).toHaveCSS(
     '--banner-height-extend',

@@ -46,13 +46,11 @@ const hasBannerCredit =
 const hasBannerLink = !!siteConfig.banner.credit.url
 const hasCustomBanner = !!(banner && banner.trim() !== '')
 const isHomePage = pathsEqual(Astro.url.pathname, url('/'))
-const useCompactBanner =
-  !hasCustomBanner && !isHomePage && !!siteConfig.banner.compactSrc
+const compactBanner = !isHomePage ? siteConfig.banner.compactSrc : undefined
+const useCompactBanner = !hasCustomBanner && !!compactBanner
 const resolvedBanner = hasCustomBanner
   ? banner
-  : useCompactBanner
-    ? siteConfig.banner.compactSrc!
-    : siteConfig.banner.src
+  : compactBanner || siteConfig.banner.src
 const resolvedBannerBasePath = hasCustomBanner ? bannerBasePath : '/'
 
 const mainPanelTop = siteConfig.banner.enable
