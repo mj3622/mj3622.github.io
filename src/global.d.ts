@@ -22,8 +22,7 @@ type PagefindAPI = {
 declare global {
   interface Window {
     pagefind?: PagefindAPI
-    pwaState?: 'offline-ready' | 'need-refresh'
-    updateServiceWorker?: () => Promise<void>
+    pwaState?: 'offline-ready'
   }
 }
 

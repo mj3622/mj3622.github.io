@@ -4,22 +4,36 @@ const { count, size, warnings } = await generateSW({
   globDirectory: 'dist',
   swDest: 'dist/sw.js',
   globPatterns: [
-    'index.html',
     '404.html',
     'manifest.webmanifest',
     '_astro/*.{js,css,woff,woff2}',
     'favicon/*.png',
   ],
   cleanupOutdatedCaches: true,
+  // Let open pages finish using their assets before activating a new worker.
   clientsClaim: false,
   skipWaiting: false,
   runtimeCaching: [
     {
-      urlPattern: ({ request }) => request.mode === 'navigate',
+      urlPattern: ({ request, url }) =>
+        url.origin === self.location.origin &&
+        (request.mode === 'navigate' ||
+          // Astro's client router fetches HTML without a navigation request.
+          (request.destination === '' &&
+            (/\/$/.test(url.pathname) ||
+              !url.pathname.split('/').pop().includes('.') ||
+              url.pathname.endsWith('.html')))),
       handler: 'NetworkFirst',
       options: {
         cacheName: 'minjer-pages',
         networkTimeoutSeconds: 3,
+        plugins: [
+          {
+            // Workbox ignores fetchOptions for navigation requests.
+            requestWillFetch: async ({ request }) =>
+              new Request(request, { cache: 'no-cache' }),
+          },
+        ],
         expiration: {
           maxEntries: 50,
           maxAgeSeconds: 60 * 60 * 24 * 30,
@@ -31,7 +45,8 @@ const { count, size, warnings } = await generateSW({
     },
     {
       urlPattern: ({ url }) =>
-        url.origin === self.location.origin && url.pathname.includes('/pagefind/'),
+        url.origin === self.location.origin &&
+        url.pathname.includes('/pagefind/'),
       handler: 'CacheFirst',
       options: {
         cacheName: 'minjer-search',
