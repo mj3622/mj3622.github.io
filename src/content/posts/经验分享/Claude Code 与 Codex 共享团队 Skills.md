@@ -4,7 +4,7 @@ published: 2026-10-24
 description: "通过 GitHub 私有仓库和原生插件市场分发团队 Skills，覆盖 macOS、Windows 接入、SSH 认证、自动更新、版本发布与回滚"
 tags: [Agent Skills, Claude Code, Codex]
 category: 经验分享
-draft: true
+draft: false
 ---
 
 团队的代码审查规范、接口约定和发布流程可以整理成 Skills，供 Claude Code 和 Codex 共用。通过私有 Git 仓库统一维护、原生插件市场分发，成员安装后就能持续获取更新，减少手动复制带来的版本差异
